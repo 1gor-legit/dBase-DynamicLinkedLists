@@ -7,14 +7,14 @@ union tipo{
     int num;
     char data;
     char logico;
-    char character;
-    char memo;
+    char character[50];
+    char memo[50];
 };
 typedef union tipo tipo;
 
 struct registros{
     tipo tipoDado;
-    struct gravar *prox;
+    struct registros *prox;
 };
 typedef struct registros reg;
 
@@ -25,6 +25,7 @@ struct Status{
 typedef struct Status Status;
 
 struct campo{
+	reg pAtual;
     char nomeCampo[50];
     char tipoDado[10]; //NUMERIC, DATE, LOGICAL, CHARACTER, MEMO
     int tam;
@@ -84,7 +85,7 @@ void InitDiscos(Unidade **unid){
 }
 
 //INSERINDO NO INICIO
-void addCampo(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int tam, int dec){
+void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int tam, int dec){
 	
     Campo *novoCampo = (Campo*)malloc(sizeof(Campo));
     
@@ -116,7 +117,7 @@ void LiberarCampos(Campo *C){
 	}
 }
 
-void SETDEFAULTTO(Unidade **unid, char *unidade){
+void SET_DEFAULT_TO(Unidade **unid, char *unidade){
 	
 	if(stricmp(unidade, "C:") == 0 || stricmp(unidade, "D:") == 0){
 		if(stricmp((*unid) -> u -> unidade, unidade) != 0){
@@ -188,7 +189,7 @@ void USE(DBF**arq, char *nomearq){
 		*arq = (*arq) -> prox;
 }
 
-void LISTSTRUCTURE(Armaz *a, DBF *arq){
+void LIST_STRUCTURE(Armaz *a, DBF *arq){
 	
 	int total = 0, cont = 1;
 	
@@ -220,6 +221,44 @@ void LISTSTRUCTURE(Armaz *a, DBF *arq){
 	
 	else
 		printf("Erro: Nenhum arquivo encontrado!\n");
+}
+
+void APPEND(DBF *arq, char **valores) {
+    
+    if(arq != NULL){
+    	
+        int i = 0;
+        Campo *campoAtual = arq -> campos;
+    
+        while(campoAtual != NULL){
+            reg *novoReg = (reg*)malloc(sizeof(reg));
+            novoReg -> prox = NULL;
+            
+            // Preenchendo o novo registro baseado no tipo do campo
+            if(stricmp(campoAtual -> tipoDado, "NUMERIC") == 0)
+                novoReg -> tipoDado.num = atoi(valores[i]);
+            
+            else if(stricmp(campoAtual -> tipoDado, "CHARACTER") == 0)
+                strncpy(novoReg -> tipoDado.character, valores[i], campoAtual -> tam);
+    
+            // Inserindo o registro na lista encadeada
+            if(campoAtual -> dados == NULL)
+                campoAtual -> dados = novoReg;
+            
+            else{
+                reg *temp = campoAtual -> dados;
+                while(temp -> prox != NULL)
+                    temp = temp -> prox;
+                
+                temp -> prox = novoReg;
+            }
+            
+            campoAtual = campoAtual -> prox;
+            i++;
+        }
+        
+        printf("Registro adicionado com sucesso!\n");
+    }
 }
 
 void QUIT(){

@@ -11,26 +11,28 @@ int main(){
     DBF *arqaux;
     
     //Escolhendo unidade de armazenamento
-    SETDEFAULTTO(&unid, "D:");
+    SET_DEFAULT_TO(&unid, "D:");
     
     //Criando DBF
     CREATE(&(unid->u), "CLIENTES.DBF", 2, 1, 2025, "10:00");
     CREATE(&(unid->u), "PRODUTOS.DBF", 11, 3, 2025, "16:13");
 	
     //Adicionando campos ao DBF
-    addCampo(&(unid -> u -> arq), "CLIENTES.DBF", "FONE", "CHARACTER", 10, 0);
-    addCampo(&(unid -> u -> arq), "CLIENTES.DBF", "NOME", "CHARACTER", 20, 0);
-    addCampo(&(unid -> u -> arq), "CLIENTES.DBF", "CODIGO", "NUMERIC", 8, 0);
+    MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "FONE", "CHARACTER", 11, 0);
+    MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "NOME", "CHARACTER", 20, 0);
+    MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "CODIGO", "NUMERIC", 8, 0);
     
     //COMANDOS DO dBASE
     DIR(unid -> u);
     
-    arqaux = unid -> u -> arq;
-    USE(&arqaux, "CLIENTES.DBF");
+    USE(&(unid -> u -> arq), "CLIENTES.DBF");
 	
-    LISTSTRUCTURE(unid -> u, arqaux);
+    LIST_STRUCTURE(unid -> u, unid -> u -> arq);
     
-    //Liberando mem�ria
+    char *valores[] = {"123", "Joao Silva", "99706-5566"};
+	APPEND(unid -> u -> arq, valores);
+    
+    //Liberando memoria
     LiberarCampos(unid -> u -> arq -> campos);
     free(unid -> u -> arq);
     free(unid -> u);
