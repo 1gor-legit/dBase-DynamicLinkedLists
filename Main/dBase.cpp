@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h> //malloc
 #include <string.h>
+#include <conio2.h> //TIRAR PARA DAR O PUSH (usando somente para testar no vscode)
 #include "commands.h"
 
 int main(){
@@ -31,11 +32,24 @@ int main(){
     
     char *valores[] = {"123", "Joao Silva", "99706-5566"};
 	APPEND(unid -> u -> arq, valores);
+	
+	char *valores1[] = {"140", "Igor Silva", "99730-2876"};
+	APPEND(unid -> u -> arq, valores1);
+	
+	char *valores2[] = {"169", "Eduardo Silva", "99671-9766"};
+	APPEND(unid -> u -> arq, valores2);
+	
+	char *valores3[] = {"222", "Lucas Malagueta", "11111-1111"};
+	APPEND(unid -> u -> arq, valores3);
+
+    LIST(unid -> u -> arq);
     
     //Liberando memoria
     LiberarCampos(unid -> u -> arq -> campos);
     free(unid -> u -> arq);
     free(unid -> u);
+
+    getch(); //TIRAR PARA DAR O PUSH (usando somente para testar no vscode)
     
     QUIT();
     return 0;

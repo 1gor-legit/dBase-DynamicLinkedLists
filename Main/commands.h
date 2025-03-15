@@ -57,7 +57,7 @@ struct unidade{
 };
 typedef struct unidade Unidade;
 
-//INIT CABEÇA DAS UNIDADES C: E D:
+//INIT CABEï¿½A DAS UNIDADES C: E D:
 void Init(Unidade **U){
 	*U = (Unidade*)malloc(sizeof(Unidade));
 }
@@ -259,6 +259,69 @@ void APPEND(DBF *arq, char **valores) {
         
         printf("Registro adicionado com sucesso!\n");
     }
+}
+
+void LIST(DBF *arq){
+	
+    if (arq == NULL || arq -> campos == NULL)
+        printf("Erro: Nenhum arquivo ou campo encontrado!\n");
+    
+    else{
+	    
+	    printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
+	
+	    int cont = 1, temRegistro = 1;
+	    
+	    while(temRegistro){
+	    	
+	    	temRegistro = 0;
+	
+	        Campo *campo = arq -> campos;
+	        while (campo != NULL){
+	        	
+	            reg *registro = campo -> dados;
+	            for (int i = 1; i < cont && registro != NULL; i++)
+	                registro = registro -> prox;
+	
+	            if (registro != NULL)
+	            	temRegistro = 1;
+	
+	            campo = campo -> prox;
+	        }
+	        
+	        if(temRegistro){
+	        	
+	        	printf("      %d", cont);
+	        	
+	        	Campo *campo = arq -> campos;
+	            while (campo != NULL){
+	            	
+	                reg *registro = campo -> dados;
+                	for(int i = 1; i < cont && registro != NULL; i++)
+                		registro = registro -> prox;
+	
+	                if (registro != NULL){
+	                    if (stricmp(campo->tipoDado, "NUMERIC") == 0)
+	                        printf("   %7d ", registro -> tipoDado.num);
+	                    
+	                    else if (stricmp(campo->tipoDado, "CHARACTER") == 0)
+	                        printf("%-20s", registro -> tipoDado.character);
+	                }
+					
+					else
+	                    printf("%-20s", " ");
+
+                	campo = campo -> prox;
+	        	}
+	        
+	        	printf("\n");
+	        	cont++;
+	    	}
+	
+		    if (cont == 1)
+		        printf("Nenhum registro encontrado.\n");
+		}
+	}
 }
 
 void QUIT(){
