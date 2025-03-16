@@ -25,7 +25,7 @@ struct Status{
 typedef struct Status Status;
 
 struct campo{
-	reg pAtual;
+	reg *pAtual;
     char nomeCampo[50];
     char tipoDado[10]; //NUMERIC, DATE, LOGICAL, CHARACTER, MEMO
     int tam;
@@ -93,7 +93,7 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     strcpy(novoCampo -> tipoDado, tipo);
     novoCampo -> tam = tam;
     novoCampo -> dec = dec;
-    novoCampo -> dados = NULL;
+    novoCampo -> pAtual = novoCampo -> dados = NULL;
     
     DBF *aux = *dbf;
     while(aux != NULL && stricmp(aux -> nomearq, arq) != 0)
@@ -243,7 +243,7 @@ void APPEND(DBF *arq, char **valores) {
     
             // Inserindo o registro na lista encadeada
             if(campoAtual -> dados == NULL)
-                campoAtual -> dados = novoReg;
+				campoAtual -> pAtual = campoAtual -> dados = novoReg;
             
             else{
                 reg *temp = campoAtual -> dados;
@@ -262,11 +262,8 @@ void APPEND(DBF *arq, char **valores) {
 }
 
 void LIST(DBF *arq){
-	
-    if (arq == NULL || arq -> campos == NULL)
-        printf("Erro: Nenhum arquivo ou campo encontrado!\n");
     
-    else{
+	if (arq != NULL || arq -> campos != NULL){
 	    
 	    printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
 	
@@ -301,10 +298,10 @@ void LIST(DBF *arq){
                 		registro = registro -> prox;
 	
 	                if (registro != NULL){
-	                    if (stricmp(campo->tipoDado, "NUMERIC") == 0)
+	                    if (stricmp(campo -> tipoDado, "NUMERIC") == 0)
 	                        printf("   %7d ", registro -> tipoDado.num);
 	                    
-	                    else if (stricmp(campo->tipoDado, "CHARACTER") == 0)
+	                    else if (stricmp(campo -> tipoDado, "CHARACTER") == 0)
 	                        printf("%-20s", registro -> tipoDado.character);
 	                }
 					
@@ -321,6 +318,112 @@ void LIST(DBF *arq){
 		    if (cont == 1)
 		        printf("Nenhum registro encontrado.\n");
 		}
+	}
+}
+
+void CLEAR(){
+	system("cls");
+}
+
+void LOCATE(Campo *c, char *campo, char *conteudo){
+
+	while(c != NULL && stricmp(c -> nomeCampo, campo) != 0){
+		printf("%s\n", c -> nomeCampo);
+		c = c -> prox;
+	}
+
+	if(c != NULL){
+		int record = 1;
+		reg *r = c -> dados;
+		while(r != NULL &&  stricmp(r -> tipoDado.character, conteudo) != 0){
+			r = r -> prox;
+			record++;
+		}
+		
+		printf("Record =     %d\n", record);
+	}
+
+	else
+		printf("Registro nao encontrado!\n");
+}
+
+void GOTO(DBF *arq, int record){
+
+	int totalRegistros = 0;
+    Campo *campo = arq -> campos;
+	reg *registro = campo -> dados;
+
+    if (campo != NULL)
+        while (registro != NULL){
+            totalRegistros++;
+            registro = registro -> prox;
+        }
+
+    if (record < 1 || record > totalRegistros)
+        printf("Registro fora do alcance!\n");
+
+	else{
+		while (campo != NULL){
+			registro = campo -> dados;
+			for (int i = 1; i < record && registro != NULL; i++)
+				registro = registro -> prox;
+			
+			campo -> pAtual = registro;
+			campo = campo -> prox;
+		}
+		printf("Registro %d acessado!\n", record);
+	}
+}
+
+void DISPLAY(DBF *arq){
+
+	int record = 1;
+
+	Campo *c = arq -> campos;
+	if(c != NULL)
+		printf("Record#    ");
+
+	while(c != NULL){
+
+		if(stricmp(c -> tipoDado, "NUMERIC") == 0)
+			printf("%-7s", c -> nomeCampo);
+
+		if(stricmp(c -> tipoDado, "CHARACTER") == 0)
+			printf("%-20s", c -> nomeCampo);
+		
+		c = c -> prox;
+	}
+	printf("\n");
+
+	reg *busca = arq -> campos -> dados;
+
+	if(stricmp(arq -> campos -> tipoDado, "NUMERIC") == 0)
+		while(busca != NULL && busca != arq -> campos -> pAtual){
+			record++;
+			busca = busca -> prox;
+		}
+	
+	if(stricmp(arq -> campos -> tipoDado, "CHARACTER") == 0)
+		while(busca != NULL && stricmp(busca -> tipoDado.character, arq -> campos -> pAtual -> tipoDado.character) != 0){
+			record++;
+			busca = busca -> prox;
+		}
+
+	printf("      %-5d", record);
+
+	c = arq -> campos;
+	while(c != NULL){
+
+		reg *registro = c -> pAtual;
+        
+		if(stricmp(c -> tipoDado, "NUMERIC") == 0)
+			printf("   %-4d", registro -> tipoDado);
+
+		if(stricmp(c -> tipoDado, "CHARACTER") == 0)
+			printf("%-20s", registro);
+
+        record++;
+		c = c -> prox;
 	}
 }
 

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h> //malloc
 #include <string.h>
-#include <conio2.h> //TIRAR PARA DAR O PUSH (usando somente para testar no vscode)
 #include "commands.h"
 
 int main(){
@@ -23,7 +22,7 @@ int main(){
     MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "NOME", "CHARACTER", 20, 0);
     MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "CODIGO", "NUMERIC", 8, 0);
     
-    //COMANDOS DO dBASE
+    //Comandos do dBase
     DIR(unid -> u);
     
     USE(&(unid -> u -> arq), "CLIENTES.DBF");
@@ -43,13 +42,19 @@ int main(){
 	APPEND(unid -> u -> arq, valores3);
 
     LIST(unid -> u -> arq);
+
+    CLEAR();
+
+    LOCATE(unid -> u -> arq -> campos, "NOME", "Igor Silva");
+
+    GOTO(unid -> u -> arq, 4);
+
+    DISPLAY(unid -> u -> arq);
     
     //Liberando memoria
     LiberarCampos(unid -> u -> arq -> campos);
     free(unid -> u -> arq);
     free(unid -> u);
-
-    getch(); //TIRAR PARA DAR O PUSH (usando somente para testar no vscode)
     
     QUIT();
     return 0;
