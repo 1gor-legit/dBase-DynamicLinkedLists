@@ -27,7 +27,7 @@ typedef struct Status Status;
 struct campo{
 	reg *pAtual;
     char nomeCampo[50];
-    char tipoDado[10]; //NUMERIC, DATE, LOGICAL, CHARACTER, MEMO
+    char tipo[10]; //NUMERIC, DATE, LOGICAL, CHARACTER, MEMO
     int tam;
     int dec;
     reg *dados;
@@ -90,7 +90,7 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     Campo *novoCampo = (Campo*)malloc(sizeof(Campo));
     
     strcpy(novoCampo -> nomeCampo, nomeCampo);
-    strcpy(novoCampo -> tipoDado, tipo);
+    strcpy(novoCampo -> tipo, tipo);
     novoCampo -> tam = tam;
     novoCampo -> dec = dec;
     novoCampo -> pAtual = novoCampo -> dados = NULL;
@@ -206,7 +206,7 @@ void LIST_STRUCTURE(Armaz *a, DBF *arq){
 		    printf("%-5s   %-10s %-10s %3s %4s\n", "Field", "FieldName", "Type", "Width", "Dec");
 		    printf("------------------------------------------\n");
 		    while(c != NULL){
-		        printf("%5d   %-10s %-10s %5d %3d\n", cont, c -> nomeCampo, c -> tipoDado, c -> tam, c -> dec);
+		        printf("%5d   %-10s %-10s %5d %3d\n", cont, c -> nomeCampo, c -> tipo, c -> tam, c -> dec);
 		        total += c -> tam;
 		        cont++;
 		        c = c -> prox;
@@ -235,10 +235,10 @@ void APPEND(DBF *arq, char **valores) {
             novoReg -> prox = NULL;
             
             // Preenchendo o novo registro baseado no tipo do campo
-            if(stricmp(campoAtual -> tipoDado, "NUMERIC") == 0)
+            if(stricmp(campoAtual -> tipo, "NUMERIC") == 0)
                 novoReg -> tipoDado.num = atoi(valores[i]);
             
-            else if(stricmp(campoAtual -> tipoDado, "CHARACTER") == 0)
+            else if(stricmp(campoAtual -> tipo, "CHARACTER") == 0)
                 strncpy(novoReg -> tipoDado.character, valores[i], campoAtual -> tam);
     
             // Inserindo o registro na lista encadeada
@@ -267,7 +267,7 @@ void LIST(DBF *arq){
 	    
 	    printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
 	
-	    int cont = 1, temRegistro = 1;
+	    int cont = 1, temRegistro = 1, i;
 	    
 	    while(temRegistro){
 	    	
@@ -277,7 +277,7 @@ void LIST(DBF *arq){
 	        while (campo != NULL){
 	        	
 	            reg *registro = campo -> dados;
-	            for (int i = 1; i < cont && registro != NULL; i++)
+	            for (i = 1; i < cont && registro != NULL; i++)
 	                registro = registro -> prox;
 	
 	            if (registro != NULL)
@@ -294,14 +294,14 @@ void LIST(DBF *arq){
 	            while (campo != NULL){
 	            	
 	                reg *registro = campo -> dados;
-                	for(int i = 1; i < cont && registro != NULL; i++)
+                	for(i = 1; i < cont && registro != NULL; i++)
                 		registro = registro -> prox;
 	
 	                if (registro != NULL){
-	                    if (stricmp(campo -> tipoDado, "NUMERIC") == 0)
+	                    if (stricmp(campo -> tipo, "NUMERIC") == 0)
 	                        printf("   %7d ", registro -> tipoDado.num);
 	                    
-	                    else if (stricmp(campo -> tipoDado, "CHARACTER") == 0)
+	                    else if (stricmp(campo -> tipo, "CHARACTER") == 0)
 	                        printf("%-20s", registro -> tipoDado.character);
 	                }
 					
@@ -349,7 +349,7 @@ void LOCATE(Campo *c, char *campo, char *conteudo){
 
 void GOTO(DBF *arq, int record){
 
-	int totalRegistros = 0;
+	int totalRegistros = 0, i;
     Campo *campo = arq -> campos;
 	reg *registro = campo -> dados;
 
@@ -365,7 +365,7 @@ void GOTO(DBF *arq, int record){
 	else{
 		while (campo != NULL){
 			registro = campo -> dados;
-			for (int i = 1; i < record && registro != NULL; i++)
+			for (i = 1; i < record && registro != NULL; i++)
 				registro = registro -> prox;
 			
 			campo -> pAtual = registro;
@@ -385,10 +385,10 @@ void DISPLAY(DBF *arq){
 
 	while(c != NULL){
 
-		if(stricmp(c -> tipoDado, "NUMERIC") == 0)
+		if(stricmp(c -> tipo, "NUMERIC") == 0)
 			printf("%-7s", c -> nomeCampo);
 
-		if(stricmp(c -> tipoDado, "CHARACTER") == 0)
+		if(stricmp(c -> tipo, "CHARACTER") == 0)
 			printf("%-20s", c -> nomeCampo);
 		
 		c = c -> prox;
@@ -397,13 +397,13 @@ void DISPLAY(DBF *arq){
 
 	reg *busca = arq -> campos -> dados;
 
-	if(stricmp(arq -> campos -> tipoDado, "NUMERIC") == 0)
+	if(stricmp(arq -> campos -> tipo, "NUMERIC") == 0)
 		while(busca != NULL && busca != arq -> campos -> pAtual){
 			record++;
 			busca = busca -> prox;
 		}
 	
-	if(stricmp(arq -> campos -> tipoDado, "CHARACTER") == 0)
+	if(stricmp(arq -> campos -> tipo, "CHARACTER") == 0)
 		while(busca != NULL && stricmp(busca -> tipoDado.character, arq -> campos -> pAtual -> tipoDado.character) != 0){
 			record++;
 			busca = busca -> prox;
@@ -416,13 +416,50 @@ void DISPLAY(DBF *arq){
 
 		reg *registro = c -> pAtual;
         
-		if(stricmp(c -> tipoDado, "NUMERIC") == 0)
+		if(stricmp(c -> tipo, "NUMERIC") == 0)
 			printf("   %-4d", registro -> tipoDado);
 
-		if(stricmp(c -> tipoDado, "CHARACTER") == 0)
+		if(stricmp(c -> tipo, "CHARACTER") == 0)
 			printf("%-20s", registro);
 
         record++;
+		c = c -> prox;
+	}
+}
+
+void EDIT(DBF *arq){
+
+	char novaString[50];
+	int novoNum;
+
+	Campo *c = arq -> campos;
+	while(c != NULL){
+
+		if(stricmp(c -> tipo, "CHARACTER") == 0)
+			printf("%s     %s\n", toupper(c -> nomeCampo), c -> pAtual);
+		
+		else if(stricmp(c -> tipo, "NUMERIC") == 0)
+			printf("%s   %d\n", toupper(c -> nomeCampo), c -> pAtual -> tipoDado);
+		
+		c = c -> prox;
+	}
+
+	c = arq -> campos;
+	while(c != NULL){
+
+		printf("\n%s: ", toupper(c -> nomeCampo));
+		
+		if(stricmp(c -> tipo, "CHARACTER") == 0){
+			fflush(stdin);
+			scanf("%s", novaString);
+			strcpy(c -> pAtual -> tipoDado.character, novaString);
+		}
+		
+		else if(stricmp(c -> tipo, "NUMERIC") == 0){
+			fflush(stdin);
+			scanf("%d", &novoNum);
+			c -> pAtual -> tipoDado.num = novoNum;
+		}
 		c = c -> prox;
 	}
 }

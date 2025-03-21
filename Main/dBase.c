@@ -50,6 +50,8 @@ int main(){
     GOTO(unid -> u -> arq, 4);
 
     DISPLAY(unid -> u -> arq);
+
+    EDIT(unid -> u -> arq);
     
     //Liberando memoria
     LiberarCampos(unid -> u -> arq -> campos);
