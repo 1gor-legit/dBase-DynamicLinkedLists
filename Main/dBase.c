@@ -10,10 +10,8 @@ int main(){
 	InitDiscos(&unid);
     DBF *arqaux;
     
-    //Escolhendo unidade de armazenamento
     SET_DEFAULT_TO(&unid, "D:");
     
-    //Criando DBF
     CREATE(&(unid->u), "CLIENTES.DBF", 2, 1, 2025, "10:00");
     CREATE(&(unid->u), "PRODUTOS.DBF", 11, 3, 2025, "16:13");
 	
@@ -42,16 +40,6 @@ int main(){
 	APPEND(unid -> u -> arq, valores3);
 
     LIST(unid -> u -> arq);
-
-    CLEAR();
-
-    LOCATE(unid -> u -> arq -> campos, "NOME", "Igor Silva");
-
-    GOTO(unid -> u -> arq, 4);
-
-    DISPLAY(unid -> u -> arq);
-
-    EDIT(unid -> u -> arq);
     
     //Liberando memoria
     LiberarCampos(unid -> u -> arq -> campos);

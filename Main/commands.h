@@ -39,7 +39,7 @@ struct DBFFile{
 	char nomearq[50];
 	Data data;
 	char hora[6];
-	Status status;
+	Status *status;
 	Campo *campos;
 	struct DBFFile *ant, *prox;
 };
@@ -81,7 +81,6 @@ void InitDiscos(Unidade **unid){
 	strcpy(C -> unidade, "C:");
 	
 	(*unid) -> u = C;
-	printf("Unidades criadas!\n");
 }
 
 //INSERINDO NO INICIO
@@ -126,7 +125,7 @@ void SET_DEFAULT_TO(Unidade **unid, char *unidade){
 			else
 				(*unid) -> u = (*unid) -> u -> prox;
 		}
-		printf("Disco alterado!\n");
+		printf("Disco alterado para %s!\n", unidade);
 	}
 	else
 		printf("Unidade invalida!\n");
@@ -141,7 +140,7 @@ void CREATE(Armaz**disco, char *nome, int dia, int mes, int ano, char *hora){
     novoarq -> data.m = mes;
     novoarq -> data.a = ano;
     strcpy(novoarq -> hora, hora);
-	novoarq -> status.info = 'A';
+	novoarq -> status = NULL;
     novoarq -> campos = NULL;
     novoarq -> ant = NULL;
     novoarq -> prox = NULL;
@@ -228,20 +227,34 @@ void APPEND(DBF *arq, char **valores) {
     if(arq != NULL){
     	
         int i = 0;
+
+		Status *novoCampoStatus = (Status*)malloc(sizeof(Status));
+		novoCampoStatus -> info = 'T';
+		novoCampoStatus -> prox = NULL;
+
+		Status *aux = arq -> status;
+
+		if(aux == NULL)
+			arq -> status = novoCampoStatus;
+		
+		else{
+			while(aux -> prox != NULL)
+				aux = aux -> prox;
+		
+			aux -> prox = novoCampoStatus;
+		}
+
         Campo *campoAtual = arq -> campos;
-    
         while(campoAtual != NULL){
             reg *novoReg = (reg*)malloc(sizeof(reg));
             novoReg -> prox = NULL;
             
-            // Preenchendo o novo registro baseado no tipo do campo
             if(stricmp(campoAtual -> tipo, "NUMERIC") == 0)
                 novoReg -> tipoDado.num = atoi(valores[i]);
             
             else if(stricmp(campoAtual -> tipo, "CHARACTER") == 0)
                 strncpy(novoReg -> tipoDado.character, valores[i], campoAtual -> tam);
     
-            // Inserindo o registro na lista encadeada
             if(campoAtual -> dados == NULL)
 				campoAtual -> pAtual = campoAtual -> dados = novoReg;
             
@@ -263,30 +276,16 @@ void APPEND(DBF *arq, char **valores) {
 
 void LIST(DBF *arq){
     
-	if (arq != NULL || arq -> campos != NULL){
-	    
-	    printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
+	if (arq != NULL && arq -> campos != NULL){
 	
-	    int cont = 1, temRegistro = 1, i;
-	    
-	    while(temRegistro){
-	    	
-	    	temRegistro = 0;
-	
-	        Campo *campo = arq -> campos;
-	        while (campo != NULL){
-	        	
-	            reg *registro = campo -> dados;
-	            for (i = 1; i < cont && registro != NULL; i++)
-	                registro = registro -> prox;
-	
-	            if (registro != NULL)
-	            	temRegistro = 1;
-	
-	            campo = campo -> prox;
-	        }
+	    int cont = 1, i;
+
+		printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
+		
+		Status *statusAtual = arq -> status;
+	    while(statusAtual != NULL){
 	        
-	        if(temRegistro){
+	        if(statusAtual -> info == 'T'){
 	        	
 	        	printf("      %d", cont);
 	        	
@@ -310,14 +309,16 @@ void LIST(DBF *arq){
 
                 	campo = campo -> prox;
 	        	}
-	        
+				
 	        	printf("\n");
-	        	cont++;
 	    	}
-	
-		    if (cont == 1)
-		        printf("Nenhum registro encontrado.\n");
+			
+			cont++;
+			statusAtual = statusAtual -> prox;
 		}
+
+		if (cont == 1)
+		    printf("Nenhum registro encontrado.\n");
 	}
 }
 
@@ -340,11 +341,11 @@ void LOCATE(Campo *c, char *campo, char *conteudo){
 			record++;
 		}
 		
-		printf("Record =     %d\n", record);
+		printf("Record =     %d", record);
 	}
 
 	else
-		printf("Registro nao encontrado!\n");
+		printf("Registro nao encontrado!");
 }
 
 void GOTO(DBF *arq, int record){
@@ -417,10 +418,10 @@ void DISPLAY(DBF *arq){
 		reg *registro = c -> pAtual;
         
 		if(stricmp(c -> tipo, "NUMERIC") == 0)
-			printf("   %-4d", registro -> tipoDado);
+			printf("   %-4d", registro -> tipoDado.num);
 
 		if(stricmp(c -> tipo, "CHARACTER") == 0)
-			printf("%-20s", registro);
+			printf("%-20s", registro -> tipoDado.character);
 
         record++;
 		c = c -> prox;
@@ -461,6 +462,61 @@ void EDIT(DBF *arq){
 			c -> pAtual -> tipoDado.num = novoNum;
 		}
 		c = c -> prox;
+	}
+}
+
+void DELETE(DBF *arq){
+
+	int pos = 0, i;
+	
+	reg *auxReg = arq -> campos -> dados;
+	while(auxReg != NULL && auxReg -> tipoDado.num != arq -> campos -> pAtual -> tipoDado.num){
+		auxReg = auxReg -> prox;
+		pos++;
+	}
+
+	Status *auxStatus = arq -> status;
+	for(i = 0; i < pos; i++)
+		auxStatus = auxStatus -> prox;
+	
+	auxStatus -> info = 'F';
+}
+
+void DELETE_ALL(DBF *arq){
+
+	Status *auxStatus = arq -> status;
+
+	while(auxStatus != NULL){
+		auxStatus -> info = 'F';
+		auxStatus = auxStatus -> prox;
+	}
+}
+
+void RECALL(DBF *arq){
+
+	int pos = 0, i;
+	
+	reg *auxReg = arq -> campos -> dados;
+	while(auxReg != NULL && auxReg -> tipoDado.num != arq -> campos -> pAtual -> tipoDado.num){
+		auxReg = auxReg -> prox;
+		pos++;
+	}
+
+	Status *auxStatus = arq -> status;
+	for(i = 0; i < pos; i++)
+		auxStatus = auxStatus -> prox;
+	
+	auxStatus -> info = 'T';
+	printf("record recalled\n");
+}
+
+void RECALL_ALL(DBF *arq){
+
+	Status *auxStatus = arq -> status;
+
+	while(auxStatus != NULL){
+		auxStatus -> info = 'T';
+		auxStatus = auxStatus -> prox;
 	}
 }
 
