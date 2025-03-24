@@ -41,6 +41,7 @@ struct DBFFile{
 	char hora[6];
 	Status *status;
 	Campo *campos;
+	int DEL;
 	struct DBFFile *ant, *prox;
 };
 typedef struct DBFFile DBF;
@@ -142,6 +143,7 @@ void CREATE(Armaz**disco, char *nome, int dia, int mes, int ano, char *hora){
     strcpy(novoarq -> hora, hora);
 	novoarq -> status = NULL;
     novoarq -> campos = NULL;
+	novoarq -> DEL = 1;
     novoarq -> ant = NULL;
     novoarq -> prox = NULL;
     
@@ -512,12 +514,25 @@ void RECALL(DBF *arq){
 
 void RECALL_ALL(DBF *arq){
 
-	Status *auxStatus = arq -> status;
+	if(arq -> DEL == 0){
+		Status *auxStatus = arq -> status;
 
-	while(auxStatus != NULL){
-		auxStatus -> info = 'T';
-		auxStatus = auxStatus -> prox;
+		while(auxStatus != NULL){
+			auxStatus -> info = 'T';
+			auxStatus = auxStatus -> prox;
+		}
 	}
+
+	else
+		printf("SET DELETED is ON, turn off to realize the operation!\n");
+}
+
+void SET_DELETED_OFF(DBF *arq){
+	arq -> DEL = 0;
+}
+
+void SET_DELETED_ON(DBF *arq){
+	arq -> DEL = 1;
 }
 
 void QUIT(){
