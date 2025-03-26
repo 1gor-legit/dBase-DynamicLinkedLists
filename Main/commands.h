@@ -328,26 +328,43 @@ void CLEAR(){
 	system("cls");
 }
 
-void LOCATE(Campo *c, char *campo, char *conteudo){
+void LOCATE(DBF *arq, char *campo, char *conteudo){
+
+	Campo *c = arq -> campos;
 
 	while(c != NULL && stricmp(c -> nomeCampo, campo) != 0){
-		printf("%s\n", c -> nomeCampo);
 		c = c -> prox;
 	}
 
 	if(c != NULL){
 		int record = 1;
 		reg *r = c -> dados;
-		while(r != NULL &&  stricmp(r -> tipoDado.character, conteudo) != 0){
-			r = r -> prox;
-			record++;
-		}
-		
-		printf("Record =     %d", record);
+		Status *statusAtual = arq -> status;
+
+		if(stricmp(c -> tipo, "CHARACTER") == 0)
+            while (r != NULL && (statusAtual -> info == 'F' || stricmp(r -> tipoDado.character, conteudo) != 0)) {
+                r = r -> prox;
+                statusAtual = statusAtual -> prox;
+                record++;
+            }
+
+        else if(stricmp(c -> tipo, "NUMERIC") == 0) {
+            int codigo = atoi(conteudo);
+            while(r != NULL && (statusAtual -> info == 'F' || r -> tipoDado.num != codigo)) {
+                r = r -> prox;
+                statusAtual = statusAtual -> prox;
+                record++;
+            }
+        }
+
+        if(r != NULL && statusAtual -> info == 'T')
+            printf("Record =     %d\n", record);
+        else
+            printf("Registro nao encontrado!\n");
 	}
 
 	else
-		printf("Registro nao encontrado!");
+		printf("Campo nao encontrado!\n");
 }
 
 void GOTO(DBF *arq, int record){
@@ -533,6 +550,67 @@ void SET_DELETED_OFF(DBF *arq){
 
 void SET_DELETED_ON(DBF *arq){
 	arq -> DEL = 1;
+}
+
+void PACK(DBF *arq){
+
+	int cont = 0, i;
+
+	if (arq == NULL || arq->status == NULL || arq->campos == NULL) {
+        printf("Nenhum arquivo encontrado!\n");
+    }
+
+	else{
+		Status *auxStat = arq -> status; 
+		Status *StatAnt = NULL;
+	
+		while(auxStat != NULL){
+			if(auxStat -> info == 'F'){
+				if(StatAnt == NULL)
+					arq -> status = auxStat -> prox;
+				else
+					StatAnt -> prox = auxStat -> prox;
+
+				Status *tempStat = auxStat;
+				auxStat = auxStat -> prox;
+				free(tempStat);
+
+				Campo *c = arq -> campos;
+				while(c != NULL){
+
+					reg *auxReg = c -> dados;
+					reg *RegAnt = NULL;
+
+					if(cont == 0){
+						c -> dados = auxReg -> prox;
+						free(auxReg);
+					}
+					else{
+						RegAnt = c -> dados;
+						auxReg = RegAnt -> prox;
+						for(i = 1; i < cont; i++){
+							RegAnt = auxReg;
+							auxReg = auxReg -> prox;
+						}
+						RegAnt -> prox = auxReg -> prox;
+						free(auxReg);
+					}
+					c -> pAtual = c -> dados;
+					c = c -> prox;
+				}
+				cont = 0;
+			}
+			else{
+				StatAnt = auxStat;
+				auxStat = auxStat -> prox;
+				cont++;
+			}
+		}
+	}
+}
+
+void ZAP(){
+
 }
 
 void QUIT(){

@@ -39,7 +39,16 @@ int main(){
 	char *valores3[] = {"222", "Lucas Malagueta", "11111-1111"};
 	APPEND(unid -> u -> arq, valores3);
 
+    /*TESTANDO O COMANDO "PACK"
+
+    CLEAR();
     LIST(unid -> u -> arq);
+    LOCATE(unid -> u -> arq, "NOME", "Igor Silva");
+    GOTO(unid -> u -> arq, 2);
+    DELETE(unid -> u -> arq);
+    PACK(unid -> u -> arq);
+    LIST(unid -> u -> arq);
+    getchar();*/
     
     //Liberando memoria
     LiberarCampos(unid -> u -> arq -> campos);
