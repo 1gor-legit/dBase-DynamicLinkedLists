@@ -16,7 +16,7 @@ struct registros{
     tipo tipoDado;
     struct registros *prox;
 };
-typedef struct registros reg;
+typedef struct registros Reg;
 
 struct Status{
 	char info;
@@ -25,12 +25,12 @@ struct Status{
 typedef struct Status Status;
 
 struct campo{
-	reg *pAtual;
+	Reg *pAtual;
     char nomeCampo[50];
     char tipo[10]; //NUMERIC, DATE, LOGICAL, CHARACTER, MEMO
     int tam;
     int dec;
-    reg *dados;
+    Reg *dados;
     struct campo *prox;
 };
 typedef struct campo Campo;
@@ -103,18 +103,6 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     	novoCampo -> prox = aux -> campos;
     	aux -> campos = novoCampo;
     }
-}
-
-void LiberarCampos(Campo *C){
-	
-	Campo *aux;
-	
-	while(C != NULL){
-		
-		aux = C;
-		C = C -> prox;
-		free(aux);
-	}
 }
 
 void SET_DEFAULT_TO(Unidade **unid, char *unidade){
@@ -248,7 +236,7 @@ void APPEND(DBF *arq, char **valores) {
 
         Campo *campoAtual = arq -> campos;
         while(campoAtual != NULL){
-            reg *novoReg = (reg*)malloc(sizeof(reg));
+            Reg *novoReg = (Reg*)malloc(sizeof(Reg));
             novoReg -> prox = NULL;
             
             if(stricmp(campoAtual -> tipo, "NUMERIC") == 0)
@@ -261,7 +249,7 @@ void APPEND(DBF *arq, char **valores) {
 				campoAtual -> pAtual = campoAtual -> dados = novoReg;
             
             else{
-                reg *temp = campoAtual -> dados;
+                Reg *temp = campoAtual -> dados;
                 while(temp -> prox != NULL)
                     temp = temp -> prox;
                 
@@ -281,10 +269,11 @@ void LIST(DBF *arq){
 	if (arq != NULL && arq -> campos != NULL){
 	
 	    int cont = 1, i;
-
-		printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
-		
 		Status *statusAtual = arq -> status;
+
+		if(statusAtual != NULL)
+			printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
+		
 	    while(statusAtual != NULL){
 	        
 	        if(statusAtual -> info == 'T'){
@@ -294,7 +283,7 @@ void LIST(DBF *arq){
 	        	Campo *campo = arq -> campos;
 	            while (campo != NULL){
 	            	
-	                reg *registro = campo -> dados;
+	                Reg *registro = campo -> dados;
                 	for(i = 1; i < cont && registro != NULL; i++)
                 		registro = registro -> prox;
 	
@@ -338,7 +327,7 @@ void LOCATE(DBF *arq, char *campo, char *conteudo){
 
 	if(c != NULL){
 		int record = 1;
-		reg *r = c -> dados;
+		Reg *r = c -> dados;
 		Status *statusAtual = arq -> status;
 
 		if(stricmp(c -> tipo, "CHARACTER") == 0)
@@ -371,7 +360,7 @@ void GOTO(DBF *arq, int record){
 
 	int totalRegistros = 0, i;
     Campo *campo = arq -> campos;
-	reg *registro = campo -> dados;
+	Reg *registro = campo -> dados;
 
     if (campo != NULL)
         while (registro != NULL){
@@ -415,7 +404,7 @@ void DISPLAY(DBF *arq){
 	}
 	printf("\n");
 
-	reg *busca = arq -> campos -> dados;
+	Reg *busca = arq -> campos -> dados;
 
 	if(stricmp(arq -> campos -> tipo, "NUMERIC") == 0)
 		while(busca != NULL && busca != arq -> campos -> pAtual){
@@ -434,7 +423,7 @@ void DISPLAY(DBF *arq){
 	c = arq -> campos;
 	while(c != NULL){
 
-		reg *registro = c -> pAtual;
+		Reg *registro = c -> pAtual;
         
 		if(stricmp(c -> tipo, "NUMERIC") == 0)
 			printf("   %-4d", registro -> tipoDado.num);
@@ -488,7 +477,7 @@ void DELETE(DBF *arq){
 
 	int pos = 0, i;
 	
-	reg *auxReg = arq -> campos -> dados;
+	Reg *auxReg = arq -> campos -> dados;
 	while(auxReg != NULL && auxReg -> tipoDado.num != arq -> campos -> pAtual -> tipoDado.num){
 		auxReg = auxReg -> prox;
 		pos++;
@@ -515,7 +504,7 @@ void RECALL(DBF *arq){
 
 	int pos = 0, i;
 	
-	reg *auxReg = arq -> campos -> dados;
+	Reg *auxReg = arq -> campos -> dados;
 	while(auxReg != NULL && auxReg -> tipoDado.num != arq -> campos -> pAtual -> tipoDado.num){
 		auxReg = auxReg -> prox;
 		pos++;
@@ -578,8 +567,8 @@ void PACK(DBF *arq){
 				Campo *c = arq -> campos;
 				while(c != NULL){
 
-					reg *auxReg = c -> dados;
-					reg *RegAnt = NULL;
+					Reg *auxReg = c -> dados;
+					Reg *RegAnt = NULL;
 
 					if(cont == 0){
 						c -> dados = auxReg -> prox;
@@ -609,8 +598,30 @@ void PACK(DBF *arq){
 	}
 }
 
-void ZAP(){
+void ZAP(DBF *arq){
 
+	Campo *c = arq -> campos;
+	Reg *r = arq -> campos -> dados;
+	Status *s = arq -> status;
+
+	while(s != NULL){
+		arq -> status = s -> prox;
+		free(s);
+		s = arq -> status;
+	}
+
+	while(c != NULL){
+		while(r != NULL){
+			c -> dados = r -> prox;
+			free(r);
+			r = c -> dados;
+		}
+		c -> dados = NULL;
+		c -> pAtual =  NULL;
+		c = c -> prox;
+	}
+
+	printf("Arquivo %s limpado com sucesso!\n", arq -> nomearq);
 }
 
 void QUIT(){

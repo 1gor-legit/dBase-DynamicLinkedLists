@@ -49,9 +49,9 @@ int main(){
     PACK(unid -> u -> arq);
     LIST(unid -> u -> arq);
     getchar();*/
-    
-    //Liberando memoria
-    LiberarCampos(unid -> u -> arq -> campos);
+
+    ZAP(unid -> u -> arq);
+
     free(unid -> u -> arq);
     free(unid -> u);
     
