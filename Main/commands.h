@@ -58,7 +58,11 @@ struct unidade{
 };
 typedef struct unidade Unidade;
 
-//INIT CABE�A DAS UNIDADES C: E D:
+void TelaPrincipal(Unidade *unid);
+void Moldura(int CI, int LI, int CF, int LF, int Frente);
+void TelaCREATE();
+
+//INIT CABECA DAS UNIDADES C: E D:
 void Init(Unidade **U){
 	*U = (Unidade*)malloc(sizeof(Unidade));
 }
@@ -84,40 +88,31 @@ void InitDiscos(Unidade **unid){
 	(*unid) -> u = C;
 }
 
-//INSERINDO NO INICIO
-void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int tam, int dec){
-	
-    Campo *novoCampo = (Campo*)malloc(sizeof(Campo));
-    
-    strcpy(novoCampo -> nomeCampo, nomeCampo);
-    strcpy(novoCampo -> tipo, tipo);
-    novoCampo -> tam = tam;
-    novoCampo -> dec = dec;
-    novoCampo -> pAtual = novoCampo -> dados = NULL;
-    
-    DBF *aux = *dbf;
-    while(aux != NULL && stricmp(aux -> nomearq, arq) != 0)
-    	aux = aux -> prox;
-    
-    if(aux != NULL){
-    	novoCampo -> prox = aux -> campos;
-    	aux -> campos = novoCampo;
-    }
-}
+void SET_DEFAULT_TO(Unidade **unid, char command[]){
 
-void SET_DEFAULT_TO(Unidade **unid, char *unidade){
-	
-	if(stricmp(unidade, "C:") == 0 || stricmp(unidade, "D:") == 0){
+	char unidade[2];
+
+	if(command[15] == 'D' || command[15] == 'C'){
+		
+		unidade[0] = command[15];
+		unidade[1] = command[16];
+
 		if(stricmp((*unid) -> u -> unidade, unidade) != 0){
 			if((*unid) -> u -> prox == NULL)
 				(*unid) -> u = (*unid) -> u -> ant;
 			else
 				(*unid) -> u = (*unid) -> u -> prox;
 		}
-		printf("Disco alterado para %s!\n", unidade);
+		TelaPrincipal(*unid);
 	}
-	else
-		printf("Unidade invalida!\n");
+
+	else{
+		TelaPrincipal(*unid);
+		textbackground(0);
+		textcolor(15);
+		gotoxy(79, 20);
+		printf("Unidade invalida!");
+	}
 }
 
 void CREATE(Armaz**disco, char *nome, int dia, int mes, int ano, char *hora){
@@ -171,6 +166,11 @@ void DIR(Armaz*a){
 			aux = aux -> prox;
 		}
 	}
+}
+
+void QUIT(){
+	printf("\nENCERRANDO O PROGRAMA!");
+	exit(0);
 }
 
 void USE(DBF**arq, char *nomearq){
@@ -624,7 +624,112 @@ void ZAP(DBF *arq){
 	printf("Arquivo %s limpado com sucesso!\n", arq -> nomearq);
 }
 
-void QUIT(){
-	printf("\nENCERRANDO O PROGRAMA!");
-	exit(0);
+//INSERINDO NO INICIO
+void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int tam, int dec){
+	
+    Campo *novoCampo = (Campo*)malloc(sizeof(Campo));
+    
+    strcpy(novoCampo -> nomeCampo, nomeCampo);
+    strcpy(novoCampo -> tipo, tipo);
+    novoCampo -> tam = tam;
+    novoCampo -> dec = dec;
+    novoCampo -> pAtual = novoCampo -> dados = NULL;
+    
+    DBF *aux = *dbf;
+    while(aux != NULL && stricmp(aux -> nomearq, arq) != 0)
+    	aux = aux -> prox;
+    
+    if(aux != NULL){
+    	novoCampo -> prox = aux -> campos;
+    	aux -> campos = novoCampo;
+    }
+}
+
+void TransformaMAIUSCULA(char str[]){
+
+	int i;
+	for(i = 0; i < strlen(str); i++)
+		str[i] = toupper(str[i]);
+}
+
+///////////////////// INTERFACE /////////////////////////////
+
+void Moldura(int CI, int LI, int CF, int LF, int Frente){
+	
+	textcolor(Frente);
+	
+	gotoxy(CI,LI);
+	printf("%c", 201);
+	gotoxy(CF,LI);
+	printf("%c", 187);
+	gotoxy(CI,LF);
+	printf("%c", 200);
+	gotoxy(CF,LF);
+	printf("%c", 188);
+	
+	for(int a = CI + 1; a < CF; a++){
+		gotoxy(a, LI);
+		printf("%c", 205);
+		gotoxy(a, LF);
+		printf("%c", 205);
+	}
+	
+	for(int a = LI + 1; a < LF; a++){
+		gotoxy(CI, a);
+		printf("%c", 186);
+		gotoxy(CF, a);
+		printf("%c", 186);
+	}
+	
+	textcolor(7);
+}
+
+void TelaPrincipal(Unidade *unid){
+
+	system("cls");
+
+	textbackground(15);
+	Moldura(25, 21, 95, 21, 15);
+
+	textcolor(0);
+	gotoxy(25, 21);
+	printf("Command Line    ||<%s>||                       ||                    ||", unid -> u);
+}
+
+void TelaCREATE(Unidade *unid){
+	
+	system("cls");
+	TelaPrincipal(unid);
+	
+	textbackground(15);
+	textcolor(0);
+	gotoxy(25, 21);
+	printf("            ");
+	gotoxy(25, 21);
+	printf("CREATE");
+
+	textbackground(0);
+
+	//CAIXA 1
+	Moldura(25, 5, 43, 10, 15);
+	gotoxy(26, 6);
+	printf(" CURSOR  <-- -->");
+	gotoxy(26, 7);
+	printf("  Char:    < >");
+	gotoxy(26, 8);
+	printf("  Word: Home End");
+	gotoxy(26, 9);
+	printf("  Pan:   ^< ^>");
+
+	//CAIXA 2
+	Moldura(43, 5, 57, 10, 15);
+
+	//CAIXA 3
+	Moldura(57, 5, 72, 10, 15);
+
+	//CAIXA 4
+	Moldura(72, 5, 95, 10, 15);
+
+	//Moldura externa
+	Moldura(25, 5, 95, 10, 15);
 }
