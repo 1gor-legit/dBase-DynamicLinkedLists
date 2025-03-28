@@ -115,15 +115,22 @@ void SET_DEFAULT_TO(Unidade **unid, char command[]){
 	}
 }
 
-void CREATE(Armaz**disco, char *nome, int dia, int mes, int ano, char *hora){
+void CREATE(Armaz**disco, char nomearq[]){
+
+	char aux[20];
+	int i;
+
+	for (i = 6; i < strlen(nomearq); i++)
+		aux[i - 6] = nomearq[i];
 	
     DBF *novoarq = (DBF*)malloc(sizeof(DBF));
     
-    strcpy(novoarq -> nomearq, nome);
-    novoarq -> data.d = dia;
-    novoarq -> data.m = mes;
-    novoarq -> data.a = ano;
-    strcpy(novoarq -> hora, hora);
+    strcpy(novoarq -> nomearq, aux);
+	strcat(novoarq -> nomearq, ".DBF");
+    novoarq -> data.d = 9;
+    novoarq -> data.m = 4;
+    novoarq -> data.a = 2025;
+    strcpy(novoarq -> hora, "10:00");
 	novoarq -> status = NULL;
     novoarq -> campos = NULL;
 	novoarq -> DEL = 1;
@@ -688,6 +695,9 @@ void TelaPrincipal(Unidade *unid){
 
 	system("cls");
 
+	gotoxy(25, 20);
+	printf(". ");
+
 	textbackground(15);
 	Moldura(25, 21, 95, 21, 15);
 
@@ -723,12 +733,42 @@ void TelaCREATE(Unidade *unid){
 
 	//CAIXA 2
 	Moldura(43, 5, 57, 10, 15);
+	gotoxy(44, 6);
+	printf("    INSERT");
+	gotoxy(44, 7);
+	printf("  Char:  Ins");
+	gotoxy(44, 8);
+	printf("  Field: ^N");
+	gotoxy(44, 9);
+	printf("  Help:  F1");
 
 	//CAIXA 3
 	Moldura(57, 5, 72, 10, 15);
+	gotoxy(58, 6);
+	printf("     DELETE");
+	gotoxy(58, 7);
+	printf("  Char:");
+	gotoxy(58, 8);
+	printf("  Word:");
+	gotoxy(58, 9);
+	printf("  Field:");
 
 	//CAIXA 4
 	Moldura(72, 5, 95, 10, 15);
+	gotoxy(73, 6);
+	printf("  Up a field:    1");
+	gotoxy(73, 7);
+	printf("  Down a field:  1");
+	gotoxy(73, 8);
+	printf("  Exit/Save:    ^End");
+	gotoxy(73, 9);
+	printf("  Abort:         Esc");
+
+	//TEXTO DEBAIXO DO COMMAND LINE
+	gotoxy(50, 22);
+	printf("Enter the field name");
+	gotoxy(21, 23);
+	printf("Field names begin with a letter and may contain letter, digits and underscores");
 
 	//Moldura externa
 	Moldura(25, 5, 95, 10, 15);

@@ -17,58 +17,49 @@ int main(){
     do{
         textbackground(0);
         textcolor(15);
-        gotoxy(25, 20);
+        gotoxy(27, 20);
         gets(command);
         TransformaMAIUSCULA(command);
 
-        // CASO SET DEFAUL TO
-        char aux[16];
-        for (int i = 0; i < 15; i++)
-            aux[i] = command[i];
-        
-        if (strcmp(aux, "SET DEFAULT TO") == 0)
+        if (strncmp(command, "SET DEFAULT TO", 14) == 0)
             SET_DEFAULT_TO(&unid, command);
-        // CASO SET DEFAUL TO
         
-        // CASO CREATE
-        if (strcmp(command, "CREATE") == 0){
+        else if (strncmp(command, "CREATE", 6) == 0){
             TelaCREATE(unid);
-            CREATE(&(unid->u), "CLIENTES.DBF", 2, 1, 2025, "10:00");
-            CREATE(&(unid->u), "PRODUTOS.DBF", 11, 3, 2025, "16:13");
+            CREATE(&(unid -> u), command);
         }
-        // CASO CREATE
 
-        if (strcmp(command, "DIR") == 0){}
+        else if (strcmp(command, "DIR") == 0){}
 
-        if (strcmp(command, "QUIT") == 0){}
+        else if (strcmp(command, "QUIT") == 0){}
 
-        if (strcmp(command, "USE") == 0){}
+        else if (strcmp(command, "USE") == 0){}
 
-        if (strcmp(command, "LIST STRCTURE") == 0){}
+        else if (strcmp(command, "LIST STRCTURE") == 0){}
 
-        if (strcmp(command, "APPEND") == 0){}
+        else if (strcmp(command, "APPEND") == 0){}
 
-        if (strcmp(command, "LIST") == 0){}
+        else if (strcmp(command, "LIST") == 0){}
 
-        if (strcmp(command, "CLEAR") == 0){}
+        else if (strcmp(command, "CLEAR") == 0){}
 
-        if (strcmp(command, "LOCATE") == 0){}
+        else if (strcmp(command, "LOCATE") == 0){}
 
-        if (strcmp(command, "GOTO") == 0){}
+        else if (strcmp(command, "GOTO") == 0){}
 
-        if (strcmp(command, "DISPLAY") == 0){}
+        else if (strcmp(command, "DISPLAY") == 0){}
 
-        if (strcmp(command, "EDIT") == 0){}
+        else if (strcmp(command, "EDIT") == 0){}
 
-        if (strcmp(command, "DELETE") == 0){}
+        else if (strcmp(command, "DELETE") == 0){}
 
-        if (strcmp(command, "RECALL") == 0){}
+        else if (strcmp(command, "RECALL") == 0){}
 
-        if (strcmp(command, "SET DELETED") == 0){}
+        else if (strcmp(command, "SET DELETED") == 0){}
 
-        if (strcmp(command, "PACK") == 0){}
+        else if (strcmp(command, "PACK") == 0){}
 
-        if (strcmp(command, "ZAP") == 0){}
+        else if (strcmp(command, "ZAP") == 0){}
 		
 	}while(strcmp(command, "EXIT") != 0);
 	
