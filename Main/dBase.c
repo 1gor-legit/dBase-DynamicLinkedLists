@@ -21,13 +21,11 @@ int main(){
         gets(command);
         TransformaMAIUSCULA(command);
 
-        if (strncmp(command, "SET DEFAULT TO", 14) == 0)
+        if (strncmp(command, "SET DEFAULT TO ", 15) == 0)
             SET_DEFAULT_TO(&unid, command);
         
-        else if (strncmp(command, "CREATE", 6) == 0){
-            TelaCREATE(unid);
-            CREATE(&(unid -> u), command);
-        }
+        else if (strncmp(command, "CREATE ", 7) == 0)
+            CREATE(&unid, command);
 
         else if (strcmp(command, "DIR") == 0){}
 
@@ -62,11 +60,6 @@ int main(){
         else if (strcmp(command, "ZAP") == 0){}
 		
 	}while(strcmp(command, "EXIT") != 0);
-	
-    //Adicionando campos ao DBF
-    MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "FONE", "CHARACTER", 11, 0);
-    MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "NOME", "CHARACTER", 20, 0);
-    MODIFY_STRUCTURE(&(unid -> u -> arq), "CLIENTES.DBF", "CODIGO", "NUMERIC", 8, 0);
     
     DIR(unid -> u);
     

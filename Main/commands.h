@@ -115,13 +115,13 @@ void SET_DEFAULT_TO(Unidade **unid, char command[]){
 	}
 }
 
-void CREATE(Armaz**disco, char nomearq[]){
+void CREATE(Unidade **unid, char nomearq[]){
 
-	char aux[20];
+	char aux[10];
 	int i;
 
-	for (i = 6; i < strlen(nomearq); i++)
-		aux[i - 6] = nomearq[i];
+	for (i = 7; nomearq[i] != ' '; i++)
+		aux[i - 7] = nomearq[i];
 	
     DBF *novoarq = (DBF*)malloc(sizeof(DBF));
     
@@ -137,14 +137,21 @@ void CREATE(Armaz**disco, char nomearq[]){
     novoarq -> ant = NULL;
     novoarq -> prox = NULL;
     
-    if((*disco) -> arq == NULL)
-    	(*disco) -> arq = novoarq;
+    if((*unid) -> u -> arq == NULL)
+		(*unid) -> u -> arq = novoarq;
     
     else{
-    	(*disco) -> arq -> ant = novoarq;
-    	novoarq -> prox = (*disco) -> arq;
-    	(*disco) -> arq = novoarq;
+    	(*unid) -> u -> arq -> ant = novoarq;
+    	novoarq -> prox = (*unid) -> u -> arq;
+    	(*unid) -> u -> arq = novoarq;
     }
+
+	TelaCREATE(*unid);
+
+	//Adicionando campos ao DBF
+	MODIFY_STRUCTURE(&((*unid) -> u -> arq), "CLIENTES.DBF", "FONE", "CHARACTER", 11, 0);
+    MODIFY_STRUCTURE(&((*unid) -> u -> arq), "CLIENTES.DBF", "NOME", "CHARACTER", 20, 0);
+    MODIFY_STRUCTURE(&((*unid) -> u -> arq), "CLIENTES.DBF", "CODIGO", "NUMERIC", 8, 0);
 }
 
 void DIR(Armaz*a){
@@ -703,7 +710,7 @@ void TelaPrincipal(Unidade *unid){
 
 	textcolor(0);
 	gotoxy(25, 21);
-	printf("Command Line    ||<%s>||                       ||                    ||", unid -> u);
+	printf("Command Line    %c<%s>%c                       %c                   %c", 186, unid -> u, 186, 186, 186);
 }
 
 void TelaCREATE(Unidade *unid){
@@ -714,9 +721,7 @@ void TelaCREATE(Unidade *unid){
 	textbackground(15);
 	textcolor(0);
 	gotoxy(25, 21);
-	printf("            ");
-	gotoxy(25, 21);
-	printf("CREATE");
+	printf("CREATE          %c<%s>%c%s", 186, unid -> u, 186, unid -> u -> arq -> nomearq);
 
 	textbackground(0);
 
@@ -741,6 +746,11 @@ void TelaCREATE(Unidade *unid){
 	printf("  Field: ^N");
 	gotoxy(44, 9);
 	printf("  Help:  F1");
+	//CONECTORES CAIXA 2
+	gotoxy(43, 5);
+	printf("%c", 203);
+	gotoxy(43, 10);
+	printf("%c", 202);
 
 	//CAIXA 3
 	Moldura(57, 5, 72, 10, 15);
@@ -752,24 +762,32 @@ void TelaCREATE(Unidade *unid){
 	printf("  Word:");
 	gotoxy(58, 9);
 	printf("  Field:");
+	//CONECTORES CAIXA 3
+	gotoxy(57, 5);
+	printf("%c", 203);
+	gotoxy(57, 10);
+	printf("%c", 202);
 
 	//CAIXA 4
 	Moldura(72, 5, 95, 10, 15);
 	gotoxy(73, 6);
-	printf("  Up a field:    1");
+	printf("  Up a field:    ^");
 	gotoxy(73, 7);
-	printf("  Down a field:  1");
+	printf("  Down a field:  v");
 	gotoxy(73, 8);
 	printf("  Exit/Save:    ^End");
 	gotoxy(73, 9);
 	printf("  Abort:         Esc");
+	//CONECTORES CAIXA 4
+	gotoxy(72, 5);
+	printf("%c", 203);
+	gotoxy(72, 10);
+	printf("%c", 202);
+
 
 	//TEXTO DEBAIXO DO COMMAND LINE
 	gotoxy(50, 22);
 	printf("Enter the field name");
 	gotoxy(21, 23);
 	printf("Field names begin with a letter and may contain letter, digits and underscores");
-
-	//Moldura externa
-	Moldura(25, 5, 95, 10, 15);
 }
