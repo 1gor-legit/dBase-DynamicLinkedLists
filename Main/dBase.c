@@ -12,12 +12,12 @@ int main(){
 	Init(&unid);
 	InitDiscos(&unid);
 
-    TelaPrincipal(unid);
-
     do{
+        TelaPrincipal(unid);
         textbackground(0);
         textcolor(15);
         gotoxy(27, 20);
+        fflush(stdin);
         gets(command);
         TransformaMAIUSCULA(command);
 
@@ -58,6 +58,9 @@ int main(){
         else if (strcmp(command, "PACK") == 0){}
 
         else if (strcmp(command, "ZAP") == 0){}
+
+        textbackground(0);
+        textcolor(15);
 		
 	}while(strcmp(command, "EXIT") != 0);
     

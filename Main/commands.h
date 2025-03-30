@@ -47,7 +47,7 @@ struct DBFFile{
 typedef struct DBFFile DBF;
 
 struct armazenamento{
-    char unidade[2]; // 'D' ou 'C'
+    char unidade[3]; // 'D:' ou 'C:'
     DBF *arq; // Lista encadeada de arquivos dentro do drive
     struct armazenamento *ant, *prox;
 };
@@ -63,8 +63,9 @@ void Moldura(int CI, int LI, int CF, int LF, int Frente);
 void TelaCREATE();
 
 //INIT CABECA DAS UNIDADES C: E D:
-void Init(Unidade **U){
-	*U = (Unidade*)malloc(sizeof(Unidade));
+void Init(Unidade **unid){
+	*unid = (Unidade*)malloc(sizeof(Unidade));
+	(*unid) -> u = NULL;
 }
 
 //CRIA DISCOS
@@ -90,7 +91,7 @@ void InitDiscos(Unidade **unid){
 
 void SET_DEFAULT_TO(Unidade **unid, char command[]){
 
-	char unidade[2];
+	char unidade[3];
 
 	if(command[15] == 'D' || command[15] == 'C'){
 		
@@ -117,11 +118,12 @@ void SET_DEFAULT_TO(Unidade **unid, char command[]){
 
 void CREATE(Unidade **unid, char nomearq[]){
 
-	char aux[10];
-	int i;
+	char aux[15], campo[15], type[15];
+	int i, width, dec;
 
 	for (i = 7; nomearq[i] != ' '; i++)
 		aux[i - 7] = nomearq[i];
+	aux[i - 7] = '\0';
 	
     DBF *novoarq = (DBF*)malloc(sizeof(DBF));
     
@@ -136,22 +138,47 @@ void CREATE(Unidade **unid, char nomearq[]){
 	novoarq -> DEL = 1;
     novoarq -> ant = NULL;
     novoarq -> prox = NULL;
-    
-    if((*unid) -> u -> arq == NULL)
-		(*unid) -> u -> arq = novoarq;
-    
-    else{
-    	(*unid) -> u -> arq -> ant = novoarq;
-    	novoarq -> prox = (*unid) -> u -> arq;
-    	(*unid) -> u -> arq = novoarq;
-    }
+
+	if((*unid) -> u != NULL){
+		if((*unid) -> u -> arq == NULL){
+			(*unid) -> u -> arq = novoarq;
+		}
+		else{
+			(*unid) -> u -> arq -> ant = novoarq;
+			novoarq -> prox = (*unid) -> u -> arq;
+			(*unid) -> u -> arq = novoarq;
+		}
+	}
 
 	TelaCREATE(*unid);
+	int y = 13, j = 1;
+	TelaCAMPO(y, j);
 
-	//Adicionando campos ao DBF
-	MODIFY_STRUCTURE(&((*unid) -> u -> arq), "CLIENTES.DBF", "FONE", "CHARACTER", 11, 0);
-    MODIFY_STRUCTURE(&((*unid) -> u -> arq), "CLIENTES.DBF", "NOME", "CHARACTER", 20, 0);
-    MODIFY_STRUCTURE(&((*unid) -> u -> arq), "CLIENTES.DBF", "CODIGO", "NUMERIC", 8, 0);
+	gotoxy(29, 13);
+	fflush(stdin);
+	gets(campo);
+	TransformaMAIUSCULA(campo);
+
+	while(stricmp(campo, "\0") != 0){
+		gotoxy(41, y);
+		fflush(stdin);
+		scanf("%s", type);
+		TransformaMAIUSCULA(type);
+		gotoxy(52, y);
+		scanf("%d", &width);
+		gotoxy(57, y);
+		scanf("%d", &dec);
+		MODIFY_STRUCTURE(&((*unid) -> u -> arq), (*unid) -> u -> arq -> nomearq, campo, type, width, dec);
+		textbackground(0);
+		textcolor(15);
+		y += 1;
+		j += 1;
+		TelaCAMPO(y, j);
+		gotoxy(29, y);
+		fflush(stdin);
+		gets(campo);
+		TransformaMAIUSCULA(campo);
+	}
 }
 
 void DIR(Armaz*a){
@@ -657,6 +684,8 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     	novoCampo -> prox = aux -> campos;
     	aux -> campos = novoCampo;
     }
+	else
+		aux -> campos = novoCampo;
 }
 
 void TransformaMAIUSCULA(char str[]){
@@ -790,4 +819,28 @@ void TelaCREATE(Unidade *unid){
 	printf("Enter the field name");
 	gotoxy(21, 23);
 	printf("Field names begin with a letter and may contain letter, digits and underscores");
+}
+
+void TelaCAMPO(int y, int j){
+	//Cabeçalho dos campos
+	textcolor(15);
+	gotoxy(29, 11);
+	printf("Field Name  Type     Width  Dec");
+	gotoxy(29, 12);
+	for(int i = 0; i <= 30; i++)
+		printf("%c", 205);
+	
+	gotoxy(26, y);
+	printf("%d", j);
+
+	textcolor(0);
+	textbackground(15);
+	gotoxy(29, y);
+	printf("          ");
+	gotoxy(41, y);
+	printf("         ");
+	gotoxy(52, y);
+	printf("   ");
+	gotoxy(57, y);
+	printf("   ");
 }
