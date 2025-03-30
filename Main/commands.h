@@ -118,15 +118,14 @@ void SET_DEFAULT_TO(Unidade **unid, char command[]){
 
 void CREATE(Unidade **unid, char nomearq[]){
 
-	char aux[15], campo[15], type[15];
+	char aux[20], campo[15], type[15];
 	int i, width, dec;
 
 	for (i = 7; nomearq[i] != ' '; i++)
 		aux[i - 7] = nomearq[i];
-	aux[i - 7] = '\0';
 	
+	//Nova caixa p/ arquivo .DBF
     DBF *novoarq = (DBF*)malloc(sizeof(DBF));
-    
     strcpy(novoarq -> nomearq, aux);
 	strcat(novoarq -> nomearq, ".DBF");
     novoarq -> data.d = 9;
@@ -139,15 +138,13 @@ void CREATE(Unidade **unid, char nomearq[]){
     novoarq -> ant = NULL;
     novoarq -> prox = NULL;
 
-	if((*unid) -> u != NULL){
-		if((*unid) -> u -> arq == NULL){
-			(*unid) -> u -> arq = novoarq;
-		}
-		else{
-			(*unid) -> u -> arq -> ant = novoarq;
-			novoarq -> prox = (*unid) -> u -> arq;
-			(*unid) -> u -> arq = novoarq;
-		}
+	if((*unid) -> u -> arq == NULL){
+		(*unid) -> u -> arq = novoarq;
+	}
+	else{
+		(*unid) -> u -> arq -> ant = novoarq;
+		novoarq -> prox = (*unid) -> u -> arq;
+		(*unid) -> u -> arq = novoarq;
 	}
 
 	TelaCREATE(*unid);
@@ -181,16 +178,19 @@ void CREATE(Unidade **unid, char nomearq[]){
 	}
 }
 
-void DIR(Armaz*a){
+void DIR(Armaz *a){
 	
-	int cont = 0, total = 0;
+	int cont = 0, total = 0, y = 9;
 	
-	if(a -> arq == NULL)
-		printf("Disco vazio!\n");
+	if(a -> arq == NULL){
+		gotoxy(26, 8);
+		printf("Disco vazio!");
+	}
 	
 	else{
 		
-		printf("%s %12s %14s %7s\n", "Database Files", "# Records", "Last Update", "Size");
+		gotoxy(26, 8);
+		printf("Database Files    # Records    Last Update    Size");
 		
 		DBF *aux = a -> arq;
 		while(aux != NULL){
@@ -202,21 +202,42 @@ void DIR(Armaz*a){
 				c = c -> prox;
 			}
 			
-			printf("%s %10d %9.2d/%.2d/%d %7d\n", aux -> nomearq, cont, aux -> data.d, aux -> data.m, aux -> data.a, total);
+			gotoxy(26, y++);
+			printf("%s             %d     %.2d/%.2d/%d       %d", aux -> nomearq, cont, aux -> data.d, aux -> data.m, aux -> data.a, total);
 			cont++;
 			aux = aux -> prox;
 		}
 	}
+	getchar();
 }
 
 void QUIT(){
-	printf("\nENCERRANDO O PROGRAMA!");
 	exit(0);
 }
 
-void USE(DBF**arq, char *nomearq){
-	while(*arq != NULL && stricmp((*arq) -> nomearq, nomearq) != 0)
-		*arq = (*arq) -> prox;
+void USE(char *nomearq, Unidade *unid){
+	char aux[20];
+	DBF *auxarq = unid -> u -> arq;
+
+	for (int i = 4; nomearq[i] != ' '; i++)
+		aux[i - 4] = nomearq[i];
+
+	while(auxarq != NULL && stricmp(auxarq -> nomearq, aux) != 0)
+		auxarq = auxarq -> prox;
+
+	if(auxarq != NULL){
+		textbackground(15);
+		textcolor(0);
+		gotoxy(25, 21);
+		printf("Command Line    %c<%s>%c%s                  %c               %c", 186, unid -> u, 186, auxarq -> nomearq, 186, 186);
+		gotoxy(95, 20);
+	}
+	else{
+		gotoxy(25, 20);
+		printf("Arquivo .DBF nao existe!");
+		gotoxy(95, 20);
+	}
+	getchar();
 }
 
 void LIST_STRUCTURE(Armaz *a, DBF *arq){

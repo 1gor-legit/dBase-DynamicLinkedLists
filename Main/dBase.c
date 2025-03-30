@@ -27,11 +27,16 @@ int main(){
         else if (strncmp(command, "CREATE ", 7) == 0)
             CREATE(&unid, command);
 
-        else if (strcmp(command, "DIR") == 0){}
+        else if (strcmp(command, "DIR") == 0)
+            DIR(unid -> u);
 
-        else if (strcmp(command, "QUIT") == 0){}
+        else if (strcmp(command, "QUIT") == 0){
+            QUIT();
+        }
 
-        else if (strcmp(command, "USE") == 0){}
+        else if (strncmp(command, "USE ", 4) == 0){
+            USE(command, unid);
+        }
 
         else if (strcmp(command, "LIST STRCTURE") == 0){}
 
@@ -63,10 +68,6 @@ int main(){
         textcolor(15);
 		
 	}while(strcmp(command, "EXIT") != 0);
-    
-    DIR(unid -> u);
-    
-    USE(&(unid -> u -> arq), "CLIENTES.DBF");
     
     char *valores[] = {"123", "Joao Silva", "99706-5566"};
 	APPEND(unid -> u -> arq, valores);
