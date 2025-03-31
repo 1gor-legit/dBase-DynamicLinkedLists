@@ -47,7 +47,7 @@ struct DBFFile{
 typedef struct DBFFile DBF;
 
 struct armazenamento{
-    char unidade[3]; // 'D:' ou 'C:'
+    char unidade[3]; // "D:" ou "C:"
     DBF *arq; // Lista encadeada de arquivos dentro do drive
     struct armazenamento *ant, *prox;
 };
@@ -62,29 +62,24 @@ void TelaPrincipal(Unidade *unid);
 void Moldura(int CI, int LI, int CF, int LF, int Frente);
 void TelaCREATE();
 
-//INIT CABECA DAS UNIDADES C: E D:
+//INIT DAS UNIDADES C: E D: E FAZ A CABEÇA APONTAR PRA C:
 void Init(Unidade **unid){
-	*unid = (Unidade*)malloc(sizeof(Unidade));
-	(*unid) -> u = NULL;
-}
 
-//CRIA DISCOS
-void InitDiscos(Unidade **unid){
-	
 	Armaz *C, *D;
 	
+	*unid = (Unidade*)malloc(sizeof(Unidade));
 	C = (Armaz*)malloc(sizeof(Armaz));
 	D = (Armaz*)malloc(sizeof(Armaz));
-	
+
+	strcpy(D -> unidade, "D:");
 	D -> ant = C;
 	D -> prox = NULL;
 	D -> arq = NULL;
-	strcpy(D -> unidade, "D:");
-	
+
+	strcpy(C -> unidade, "C:");
 	C -> prox = D;
 	C -> ant = NULL;
 	C -> arq = NULL;
-	strcpy(C -> unidade, "C:");
 	
 	(*unid) -> u = C;
 }
@@ -104,7 +99,6 @@ void SET_DEFAULT_TO(Unidade **unid, char command[]){
 			else
 				(*unid) -> u = (*unid) -> u -> prox;
 		}
-		TelaPrincipal(*unid);
 	}
 
 	else{
@@ -113,6 +107,7 @@ void SET_DEFAULT_TO(Unidade **unid, char command[]){
 		textcolor(15);
 		gotoxy(79, 20);
 		printf("Unidade invalida!");
+		getchar();
 	}
 }
 
@@ -138,14 +133,11 @@ void CREATE(Unidade **unid, char nomearq[]){
     novoarq -> ant = NULL;
     novoarq -> prox = NULL;
 
-	if((*unid) -> u -> arq == NULL){
-		(*unid) -> u -> arq = novoarq;
-	}
-	else{
+	novoarq -> prox = (*unid) -> u -> arq;
+	if ((*unid) -> u -> arq != NULL)
 		(*unid) -> u -> arq -> ant = novoarq;
-		novoarq -> prox = (*unid) -> u -> arq;
-		(*unid) -> u -> arq = novoarq;
-	}
+	
+	(*unid) -> u -> arq = novoarq;
 
 	TelaCREATE(*unid);
 	int y = 13, j = 1;
@@ -180,10 +172,10 @@ void CREATE(Unidade **unid, char nomearq[]){
 
 void DIR(Armaz *a){
 	
-	int cont = 0, total = 0, y = 9;
+	int cont = 1, total, y = 9;
 	
 	if(a -> arq == NULL){
-		gotoxy(26, 8);
+		gotoxy(84, 20);
 		printf("Disco vazio!");
 	}
 	
@@ -196,6 +188,7 @@ void DIR(Armaz *a){
 		while(aux != NULL){
 			
 			Campo *c = a -> arq -> campos;
+			total = 0;
 	
 			while(c != NULL){
 				total += c -> tam;
@@ -203,7 +196,7 @@ void DIR(Armaz *a){
 			}
 			
 			gotoxy(26, y++);
-			printf("%s             %d     %.2d/%.2d/%d       %d", aux -> nomearq, cont, aux -> data.d, aux -> data.m, aux -> data.a, total);
+			printf("%-23s%d        %.2d/%.2d/%d     %d", aux -> nomearq, cont, aux -> data.d, aux -> data.m, aux -> data.a, total);
 			cont++;
 			aux = aux -> prox;
 		}
@@ -215,70 +208,98 @@ void QUIT(){
 	exit(0);
 }
 
-void USE(char *nomearq, Unidade *unid){
+void USE(Unidade *unid, char *nomearq, DBF**arqAberto){
 	char aux[20];
-	DBF *auxarq = unid -> u -> arq;
+	DBF *arquivos = unid -> u -> arq;
+	*arqAberto = unid -> u -> arq;
 
 	for (int i = 4; nomearq[i] != ' '; i++)
 		aux[i - 4] = nomearq[i];
 
-	while(auxarq != NULL && stricmp(auxarq -> nomearq, aux) != 0)
-		auxarq = auxarq -> prox;
+	while(arquivos != NULL && stricmp(arquivos -> nomearq, aux) != 0)
+		arquivos = arquivos -> prox;
 
-	if(auxarq != NULL){
+	if(arquivos != NULL){
+		*arqAberto = arquivos;
 		textbackground(15);
 		textcolor(0);
 		gotoxy(25, 21);
-		printf("Command Line    %c<%s>%c%s                  %c               %c", 186, unid -> u, 186, auxarq -> nomearq, 186, 186);
+		printf("USE             %c<%s>%c%s                  %c                %c ", 186, unid -> u, 186, (*arqAberto) -> nomearq, 186, 186);
 		gotoxy(95, 20);
 	}
 	else{
 		gotoxy(25, 20);
-		printf("Arquivo .DBF nao existe!");
-		gotoxy(95, 20);
+		printf("Arquivo %s nao existe!", aux);
 	}
+	
+	textbackground(0);
+	textcolor(15);
+	gotoxy(45, 22);
+	printf("Type BACK to exit from file");
+
 	getchar();
 }
 
-void LIST_STRUCTURE(Armaz *a, DBF *arq){
+void LIST_STRUCTURE(Armaz *a, DBF *arqAberto){
 	
 	int total = 0, cont = 1;
 	
-	if(arq != NULL){
+	if(arqAberto != NULL){
 		
-		printf("Structure for database: %s\\%s\n", a -> unidade, arq -> nomearq);
-	    printf("Number of data records: %5d\n", 0);
-	    printf("Date of last update   : %.2d/%.2d/%d\n", arq -> data.d, arq -> data.m, arq -> data.a);
+		gotoxy(40, 4);
+		printf("Structure for database: %s\\%s", a -> unidade, arqAberto -> nomearq);
+	    gotoxy(40, 5);
+		printf("Number of data records: %5d", 0);
+	    gotoxy(40, 6);
+		printf("Date of last update   : %.2d/%.2d/%d", arqAberto -> data.d, arqAberto -> data.m, arqAberto -> data.a);
 	    
-	    Campo *c = arq -> campos;
+	    Campo *c = arqAberto -> campos;
+		int y = 10;
 	    
 	    if(c != NULL){
+			gotoxy(40, 7);
 	    	printf("------------------------------------------\n");
-		    printf("%-5s   %-10s %-10s %3s %4s\n", "Field", "FieldName", "Type", "Width", "Dec");
-		    printf("------------------------------------------\n");
+		    gotoxy(40, 8);
+			printf("%-5s   %-10s %-10s %3s %4s\n", "Field", "FieldName", "Type", "Width", "Dec");
+		    gotoxy(40, 9);
+			printf("------------------------------------------\n");
 		    while(c != NULL){
-		        printf("%5d   %-10s %-10s %5d %3d\n", cont, c -> nomeCampo, c -> tipo, c -> tam, c -> dec);
+				gotoxy(40, y++);
+		        printf("%5d   %-10s %-10s %5d %3d", cont, c -> nomeCampo, c -> tipo, c -> tam, c -> dec);
 		        total += c -> tam;
 		        cont++;
 		        c = c -> prox;
 		    }
-		    printf("** Total ** %23d\n", total);
-		    printf("------------------------------------------\n");
+			gotoxy(40, y++);
+		    printf("** Total ** %23d", total);
+			gotoxy(40, y++);
+		    printf("------------------------------------------");
 	    }
 	    
-	    else
-	    	printf("Nenhum campo registrado.\n");
+	    else{
+			gotoxy(72, 20);
+			printf("Nenhum campo registrado.");
+		}
+	    	
 	}
 	
-	else
-		printf("Erro: Nenhum arquivo encontrado!\n");
+	else{
+		gotoxy(64, 20);
+		printf("Erro: Nenhum arquivo encontrado!");
+	}
+
+	getchar();
 }
 
-void APPEND(DBF *arq, char **valores) {
+void APPEND(DBF *arq) {
     
     if(arq != NULL){
+
+		gotoxy(27, 20);
+		printf("      ");
     	
-        int i = 0;
+        int dadoNum;
+		char dadoChar[30];
 
 		Status *novoCampoStatus = (Status*)malloc(sizeof(Status));
 		novoCampoStatus -> info = 'T';
@@ -300,12 +321,19 @@ void APPEND(DBF *arq, char **valores) {
         while(campoAtual != NULL){
             Reg *novoReg = (Reg*)malloc(sizeof(Reg));
             novoReg -> prox = NULL;
+
+			if(stricmp(campoAtual -> tipo, "NUMERIC") == 0){
+				gotoxy(27, 20);
+				scanf("%d", &dadoNum);
+				novoReg -> tipoDado.num = dadoNum;
+			}
             
-            if(stricmp(campoAtual -> tipo, "NUMERIC") == 0)
-                novoReg -> tipoDado.num = atoi(valores[i]);
-            
-            else if(stricmp(campoAtual -> tipo, "CHARACTER") == 0)
-                strncpy(novoReg -> tipoDado.character, valores[i], campoAtual -> tam);
+            else if(stricmp(campoAtual -> tipo, "CHARACTER") == 0){
+				gotoxy(27, 20);
+				fflush(stdin);
+				gets(dadoChar);
+				strncpy(novoReg -> tipoDado.character, dadoChar, campoAtual -> tam);
+			}
     
             if(campoAtual -> dados == NULL)
 				campoAtual -> pAtual = campoAtual -> dados = novoReg;
@@ -319,10 +347,11 @@ void APPEND(DBF *arq, char **valores) {
             }
             
             campoAtual = campoAtual -> prox;
-            i++;
         }
         
-        printf("Registro adicionado com sucesso!\n");
+		gotoxy(64, 20);
+        printf("Registro adicionado com sucesso!");
+		getchar();
     }
 }
 
@@ -330,53 +359,70 @@ void LIST(DBF *arq){
     
 	if (arq != NULL && arq -> campos != NULL){
 	
-	    int cont = 1, i;
+	    int cont = 1, i, y = 5;
 		Status *statusAtual = arq -> status;
 
-		if(statusAtual != NULL)
+		if(statusAtual != NULL){
+			gotoxy(40, 4);
 			printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
+		}
 		
 	    while(statusAtual != NULL){
 	        
 	        if(statusAtual -> info == 'T'){
 	        	
+				gotoxy(40, y);
 	        	printf("      %d", cont);
 	        	
 	        	Campo *campo = arq -> campos;
 	            while (campo != NULL){
+
+					gotoxy(40, y);
+	        		printf("      %d", cont);
 	            	
 	                Reg *registro = campo -> dados;
                 	for(i = 1; i < cont && registro != NULL; i++)
                 		registro = registro -> prox;
 	
 	                if (registro != NULL){
-	                    if (stricmp(campo -> tipo, "NUMERIC") == 0)
-	                        printf("   %7d ", registro -> tipoDado.num);
+	                    if (stricmp(campo -> tipo, "NUMERIC") == 0){
+							printf("   %7d ", registro -> tipoDado.num);
+						}
 	                    
-	                    else if (stricmp(campo -> tipo, "CHARACTER") == 0)
-	                        printf("%-20s", registro -> tipoDado.character);
+	                    else if (stricmp(campo -> tipo, "CHARACTER") == 0){
+							printf("%-20s", registro -> tipoDado.character);
+						}
 	                }
 					
-					else
-	                    printf("%-20s", " ");
-
+					else{
+						gotoxy(40, y);
+						printf("%-20s", " ");
+					}
+	                    
                 	campo = campo -> prox;
 	        	}
 				
-	        	printf("\n");
+	        	y++;
 	    	}
 			
 			cont++;
 			statusAtual = statusAtual -> prox;
 		}
 
-		if (cont == 1)
-		    printf("Nenhum registro encontrado.\n");
+		if (cont == 1){
+			gotoxy(69, 20);
+			printf("Nenhum registro encontrado.");
+		}
 	}
+
+	getchar();
 }
 
-void CLEAR(){
+void CLEAR(Unidade *unid, DBF *arqAberto){
 	system("cls");
+	TelaPrincipal(unid);
+	gotoxy(25, 21);
+	printf("USE             %c<%s>%c%s                  %c                %c ", 186, unid -> u, 186, arqAberto -> nomearq, 186, 186);     
 }
 
 void LOCATE(DBF *arq, char *campo, char *conteudo){
