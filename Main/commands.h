@@ -187,7 +187,7 @@ void DIR(Armaz *a){
 		DBF *aux = a -> arq;
 		while(aux != NULL){
 			
-			Campo *c = a -> arq -> campos;
+			Campo *c = aux -> campos;
 			total = 0;
 	
 			while(c != NULL){
@@ -211,7 +211,6 @@ void QUIT(){
 void USE(Unidade *unid, char *nomearq, DBF**arqAberto){
 	char aux[20];
 	DBF *arquivos = unid -> u -> arq;
-	*arqAberto = unid -> u -> arq;
 
 	for (int i = 4; nomearq[i] != ' '; i++)
 		aux[i - 4] = nomearq[i];
@@ -226,18 +225,16 @@ void USE(Unidade *unid, char *nomearq, DBF**arqAberto){
 		gotoxy(25, 21);
 		printf("USE             %c<%s>%c%s                  %c                %c ", 186, unid -> u, 186, (*arqAberto) -> nomearq, 186, 186);
 		gotoxy(95, 20);
+		textbackground(0);
+		textcolor(15);
+		gotoxy(45, 22);
+		printf("Type BACK to exit from file");
 	}
 	else{
 		gotoxy(25, 20);
 		printf("Arquivo %s nao existe!", aux);
+		getchar();
 	}
-	
-	textbackground(0);
-	textcolor(15);
-	gotoxy(45, 22);
-	printf("Type BACK to exit from file");
-
-	getchar();
 }
 
 void LIST_STRUCTURE(Armaz *a, DBF *arqAberto){
@@ -425,8 +422,20 @@ void CLEAR(Unidade *unid, DBF *arqAberto){
 	printf("USE             %c<%s>%c%s                  %c                %c ", 186, unid -> u, 186, arqAberto -> nomearq, 186, 186);     
 }
 
-void LOCATE(DBF *arq, char *campo, char *conteudo){
+void LOCATE(DBF *arq, char *command){
+	char conteudo[20], campo[20];
+	int i, j;
+	for (i = 11; command[i] != ' '; i++)
+		campo[i - 11] = command[i];
+	campo[i - 11] = '\0';
+	for (j = i + 4; command[j] != '"'; j++)
+		conteudo[j - (i + 4)] = command[j];
+	conteudo[j - (i + 4)] = '\0';
 
+	printf("%s\n", campo);
+	printf("%s", conteudo);
+	getchar();
+	
 	Campo *c = arq -> campos;
 
 	while(c != NULL && stricmp(c -> nomeCampo, campo) != 0){
@@ -462,6 +471,8 @@ void LOCATE(DBF *arq, char *campo, char *conteudo){
 
 	else
 		printf("Campo nao encontrado!\n");
+
+	getchar();
 }
 
 void GOTO(DBF *arq, int record){
