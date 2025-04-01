@@ -6,6 +6,7 @@
 
 int main(){
 	
+    Reg *regAtual = NULL;
     DBF *arqAberto = NULL;
     Unidade *unid = NULL;
     char command[45] = {0};
@@ -63,6 +64,8 @@ int main(){
                         LIST(unid -> u -> arq);
                     }
 
+                    else if(strncmp(command, "LIST FOR ", 9)){}
+
                     else if (strcmp(command, "CLEAR") == 0){
                         CLEAR(unid, arqAberto);
                     }
@@ -71,23 +74,53 @@ int main(){
                         LOCATE(arqAberto, command);
                     }
 
-                    else if (strcmp(command, "GOTO") == 0){}
+                    else if (strcmp(command, "CLEAR") == 0){
+                        CLEAR(unid, arqAberto);
+                    }
 
-                    else if (strcmp(command, "DISPLAY") == 0){}
+                    else if (strncmp(command, "GOTO ", 5) == 0){
+                        GOTO(arqAberto, command, &regAtual);
+                    }
 
-                    else if (strcmp(command, "EDIT") == 0){}
+                    else if (strcmp(command, "DISPLAY") == 0){
+                        DISPLAY(arqAberto);
+                    }
 
-                    else if (strcmp(command, "DELETE") == 0){}
+                    else if (strcmp(command, "EDIT") == 0){
+                        EDIT(arqAberto);
+                    }
 
-                    else if (strcmp(command, "DELETE ALL") == 0){}
+                    else if (strcmp(command, "DELETE") == 0){
+                        DELETE(arqAberto);
+                    }
 
-                    else if (strcmp(command, "RECALL") == 0){}
+                    else if (strcmp(command, "DELETE ALL") == 0){
+                        DELETE_ALL(arqAberto);
+                    }
 
-                    else if (strcmp(command, "SET DELETED") == 0){}
+                    else if (strcmp(command, "RECALL") == 0){
+                        RECALL(arqAberto);
+                    }
 
-                    else if (strcmp(command, "PACK") == 0){}
+                    else if (strcmp(command, "RECALL ALL") == 0){
+                        RECALL_ALL(arqAberto);
+                    }
 
-                    else if (strcmp(command, "ZAP") == 0){}
+                    else if (strcmp(command, "SET DELETED OFF") == 0){
+                        SET_DELETED_OFF(arqAberto);
+                    }
+
+                    else if(strcmp(command, "SET DELETED ON") == 0){
+                        SET_DELETED_ON(arqAberto);
+                    }
+
+                    else if (strcmp(command, "PACK") == 0){
+                        PACK(arqAberto);
+                    }
+
+                    else if (strcmp(command, "ZAP") == 0){
+                        ZAP(arqAberto);
+                    }
                 }
                 else{
                     strcpy(command, "BACK");
@@ -96,9 +129,17 @@ int main(){
             } while(strcmp(command, "BACK") != 0);
         }
 
-        else if (strcmp(command, "CLEAR") == 0){}
+        else if (strcmp(command, "CLEAR") == 0){
+            TelaPrincipal(unid);
+        }
 
-        else if (strcmp(command, "SET DELETED") == 0){}
+        else if (strcmp(command, "SET DELETED OFF") == 0){
+            SET_DELETED_OFF(arqAberto);
+        }
+
+        else if(strcmp(command, "SET DELETED ON") == 0){
+            SET_DELETED_ON(arqAberto);
+        }
 
         textbackground(0);
         textcolor(15);

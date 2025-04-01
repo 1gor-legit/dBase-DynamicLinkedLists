@@ -318,6 +318,8 @@ void APPEND(DBF *arq) {
         while(campoAtual != NULL){
             Reg *novoReg = (Reg*)malloc(sizeof(Reg));
             novoReg -> prox = NULL;
+			gotoxy(27, 20);
+			printf("                        ");
 
 			if(stricmp(campoAtual -> tipo, "NUMERIC") == 0){
 				gotoxy(27, 20);
@@ -356,57 +358,56 @@ void LIST(DBF *arq){
     
 	if (arq != NULL && arq -> campos != NULL){
 	
-	    int cont = 1, i, y = 5;
+	    int cont = 0, i, y = 5, record = 1;
 		Status *statusAtual = arq -> status;
 
 		if(statusAtual != NULL){
-			gotoxy(40, 4);
-			printf("%s %9s %3s %19s\n", "Record#", "CODIGO", "NOME", "FONE");
-		}
-		
-	    while(statusAtual != NULL){
-	        
-	        if(statusAtual -> info == 'T'){
-	        	
-				gotoxy(40, y);
-	        	printf("      %d", cont);
-	        	
-	        	Campo *campo = arq -> campos;
-	            while (campo != NULL){
-
-					gotoxy(40, y);
-	        		printf("      %d", cont);
-	            	
-	                Reg *registro = campo -> dados;
-                	for(i = 1; i < cont && registro != NULL; i++)
-                		registro = registro -> prox;
-	
-	                if (registro != NULL){
-	                    if (stricmp(campo -> tipo, "NUMERIC") == 0){
-							printf("   %7d ", registro -> tipoDado.num);
-						}
-	                    
-	                    else if (stricmp(campo -> tipo, "CHARACTER") == 0){
-							printf("%-20s", registro -> tipoDado.character);
-						}
-	                }
-					
-					else{
-						gotoxy(40, y);
-						printf("%-20s", " ");
-					}
-	                    
-                	campo = campo -> prox;
-	        	}
-				
-	        	y++;
-	    	}
+			gotoxy(25, 4);
+			printf("Record#");
+			Campo *campo = arq -> campos;
+			while(campo != NULL){
+				printf("%12s", campo -> nomeCampo);
+				campo = campo -> prox;
+			}
 			
-			cont++;
-			statusAtual = statusAtual -> prox;
+
+			while(statusAtual != NULL){
+	        
+				if(statusAtual -> info == 'T'){
+					
+					campo = arq -> campos;
+					int x = 40;
+
+					gotoxy(25, y);
+					printf("      %d", record);
+
+					while (campo != NULL){
+						
+						Reg *registro = campo -> dados;
+						for(i = 0; i < cont && registro != NULL; i++)
+							registro = registro -> prox;
+		
+						if (registro != NULL){
+							if (stricmp(campo -> tipo, "NUMERIC") == 0)
+								printf("%12d", registro -> tipoDado.num);
+							
+							else if (stricmp(campo -> tipo, "CHARACTER") == 0)
+								printf("    %-13s", registro -> tipoDado.character);
+						}
+							
+						campo = campo -> prox;
+					}
+					
+					y++;
+					record++;
+				}
+
+				cont++;
+				statusAtual = statusAtual -> prox;
+			}
 		}
 
-		if (cont == 1){
+		else if (cont == 0){
 			gotoxy(69, 20);
 			printf("Nenhum registro encontrado.");
 		}
@@ -431,10 +432,6 @@ void LOCATE(DBF *arq, char *command){
 	for (j = i + 4; command[j] != '"'; j++)
 		conteudo[j - (i + 4)] = command[j];
 	conteudo[j - (i + 4)] = '\0';
-
-	printf("%s\n", campo);
-	printf("%s", conteudo);
-	getchar();
 	
 	Campo *c = arq -> campos;
 
@@ -475,7 +472,11 @@ void LOCATE(DBF *arq, char *command){
 	getchar();
 }
 
-void GOTO(DBF *arq, int record){
+void GOTO(DBF *arq, char *command, Reg **regAtual){
+	char aux[20]; int record;
+	for(int i = 5; command[i] != ' '; i++)
+		aux[i - 5] = command[i];
+	record = atoi(aux);
 
 	int totalRegistros = 0, i;
     Campo *campo = arq -> campos;
@@ -487,8 +488,11 @@ void GOTO(DBF *arq, int record){
             registro = registro -> prox;
         }
 
-    if (record < 1 || record > totalRegistros)
-        printf("Registro fora do alcance!\n");
+    if (record < 1 || record > totalRegistros){
+		gotoxy(71, 20);
+		printf("Registro fora do alcance!\n");
+	}
+        
 
 	else{
 		while (campo != NULL){
@@ -499,60 +503,86 @@ void GOTO(DBF *arq, int record){
 			campo -> pAtual = registro;
 			campo = campo -> prox;
 		}
+		gotoxy(76, 20);
 		printf("Registro %d acessado!\n", record);
 	}
+	getchar();
 }
 
 void DISPLAY(DBF *arq){
 
-	int record = 1;
+	int record = 1, x = 25;
 
-	Campo *c = arq -> campos;
-	if(c != NULL)
-		printf("Record#    ");
-
-	while(c != NULL){
-
-		if(stricmp(c -> tipo, "NUMERIC") == 0)
-			printf("%-7s", c -> nomeCampo);
-
-		if(stricmp(c -> tipo, "CHARACTER") == 0)
-			printf("%-20s", c -> nomeCampo);
-		
-		c = c -> prox;
-	}
-	printf("\n");
-
-	Reg *busca = arq -> campos -> dados;
-
-	if(stricmp(arq -> campos -> tipo, "NUMERIC") == 0)
-		while(busca != NULL && busca != arq -> campos -> pAtual){
-			record++;
-			busca = busca -> prox;
-		}
-	
-	if(stricmp(arq -> campos -> tipo, "CHARACTER") == 0)
-		while(busca != NULL && stricmp(busca -> tipoDado.character, arq -> campos -> pAtual -> tipoDado.character) != 0){
-			record++;
-			busca = busca -> prox;
+	if(arq -> campos -> pAtual != NULL){
+		Campo *c = arq -> campos;
+		if(c != NULL){
+			gotoxy(x, 16);
+			printf("Record#    ");
+			x += 11;
 		}
 
-	printf("      %-5d", record);
+		while(c != NULL){
 
-	c = arq -> campos;
-	while(c != NULL){
+			if(stricmp(c -> tipo, "NUMERIC") == 0){
+				gotoxy(x, 16);
+				printf("%-7s", c -> nomeCampo);
+				x += 10;
+			}
 
-		Reg *registro = c -> pAtual;
-        
-		if(stricmp(c -> tipo, "NUMERIC") == 0)
-			printf("   %-4d", registro -> tipoDado.num);
+			else if(stricmp(c -> tipo, "CHARACTER") == 0){
+				gotoxy(x, 16);
+				printf("%-20s", c -> nomeCampo);
+				x += 10;
+			}
+			
+			c = c -> prox;
+		}
+		printf("\n");
 
-		if(stricmp(c -> tipo, "CHARACTER") == 0)
-			printf("%-20s", registro -> tipoDado.character);
+		Reg *busca = arq -> campos -> dados;
 
-        record++;
-		c = c -> prox;
+		if(stricmp(arq -> campos -> tipo, "NUMERIC") == 0)
+			while(busca != NULL && busca != arq -> campos -> pAtual){
+				record++;
+				busca = busca -> prox;
+			}
+
+		else if(stricmp(arq -> campos -> tipo, "CHARACTER") == 0)
+			while(busca != NULL && stricmp(busca -> tipoDado.character, arq -> campos -> pAtual -> tipoDado.character) != 0){
+				record++;
+				busca = busca -> prox;
+			}
+
+		x = 31;
+		gotoxy(x, 17);
+		printf("%-5d", record);
+		x += 4;
+
+		c = arq -> campos;
+		while(c != NULL){
+
+			Reg *registro = c -> pAtual;
+			
+			if(stricmp(c -> tipo, "NUMERIC") == 0){
+				gotoxy(x++, 17);
+				printf("   %-4d", registro -> tipoDado.num);
+			}
+
+			else if(stricmp(c -> tipo, "CHARACTER") == 0){
+				gotoxy(x++, 17);
+				printf("%-20s", registro -> tipoDado.character);
+			}
+
+			record++;
+			c = c -> prox;
+		}
 	}
+	else{
+		gotoxy(69, 20);
+		printf("Nenhum registro encontrado!");
+	}
+
+	getchar();
 }
 
 void EDIT(DBF *arq){
@@ -607,6 +637,9 @@ void DELETE(DBF *arq){
 		auxStatus = auxStatus -> prox;
 	
 	auxStatus -> info = 'F';
+	gotoxy(25, 18);
+	printf("1 record deleted");
+	getchar();
 }
 
 void DELETE_ALL(DBF *arq){
@@ -617,6 +650,8 @@ void DELETE_ALL(DBF *arq){
 		auxStatus -> info = 'F';
 		auxStatus = auxStatus -> prox;
 	}
+	gotoxy(25, 18);
+	printf("all records deleted");
 }
 
 void RECALL(DBF *arq){
@@ -634,7 +669,9 @@ void RECALL(DBF *arq){
 		auxStatus = auxStatus -> prox;
 	
 	auxStatus -> info = 'T';
-	printf("record recalled\n");
+	gotoxy(25, 18);
+	printf("record recalled");
+	getchar();
 }
 
 void RECALL_ALL(DBF *arq){
@@ -646,10 +683,15 @@ void RECALL_ALL(DBF *arq){
 			auxStatus -> info = 'T';
 			auxStatus = auxStatus -> prox;
 		}
+		gotoxy(25, 18);
+		printf("all records recalled");
 	}
 
-	else
-		printf("SET DELETED is ON, turn off to realize the operation!\n");
+	else{
+		gotoxy(25, 18);
+		printf("SET DELETED is ON, turn off to realize the operation!");
+	}
+	getchar();
 }
 
 void SET_DELETED_OFF(DBF *arq){
@@ -665,7 +707,8 @@ void PACK(DBF *arq){
 	int cont = 0, i;
 
 	if (arq == NULL || arq->status == NULL || arq->campos == NULL) {
-        printf("Nenhum arquivo encontrado!\n");
+		gotoxy(70, 20);
+		printf("Nenhum arquivo encontrado!");
     }
 
 	else{
@@ -714,7 +757,10 @@ void PACK(DBF *arq){
 				cont++;
 			}
 		}
+		gotoxy(64, 20);
+		printf("Registros excluidos fisicamente!");
 	}
+	getchar();
 }
 
 void ZAP(DBF *arq){
@@ -740,7 +786,9 @@ void ZAP(DBF *arq){
 		c = c -> prox;
 	}
 
-	printf("Arquivo %s limpado com sucesso!\n", arq -> nomearq);
+	gotoxy(25, 18);
+	printf("Arquivo %s limpado com sucesso!", arq -> nomearq);
+	getchar();
 }
 
 //INSERINDO NO INICIO
