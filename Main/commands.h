@@ -435,7 +435,7 @@ void LIST(DBF *arq){
 void LIST_FOR(DBF *arq, char *command){
     if (arq != NULL && arq -> campos != NULL) {
         char conteudo[30], campo[30];
-        int i, j;
+        int i, j, y = 5, record = 1;
 
         for (i = 9; command[i] != ' '; i++)
             campo[i - 9] = command[i];
@@ -445,32 +445,48 @@ void LIST_FOR(DBF *arq, char *command){
 			conteudo[j - (i + 4)] = command[j];
 		conteudo[j - (i + 4)] = '\0';
 
+		gotoxy(25, 4);
+		printf("Record#");
+
 		// Procura o campo na estrutura
 		Campo *c = arq -> campos;
 		while (c != NULL && stricmp(c -> nomeCampo, campo) != 0)
 			c = c -> prox;
 
+		printf("%10s", c -> nomeCampo);
+
 		if (c != NULL){
 
 			Reg *reg = c -> dados;
 			while(reg != NULL){
+
+				gotoxy(25, y);
+
 				if(stricmp(c -> tipo, "NUMERIC") == 0){
 					int content = atoi(conteudo);
 		
-					if(content == reg -> tipoDado.num)
+					if(content == reg -> tipoDado.num){
+						printf("      %-5d", record);
 						printf("%-12d", reg -> tipoDado.num);
+						record++;
+						y++;
+					}
 				}
 		
 				else if(stricmp(c -> tipo, "CHARACTER") == 0){
 		
-					char aux[30];
+					char aux[30] = {};
 					for (int i = 0; i < strlen(conteudo); i++)
 						aux[i] = reg -> tipoDado.character[i];
+					aux[i] = '\0';
 		
-					if(stricmp(aux, conteudo) == 0)
+					if(stricmp(aux, conteudo) == 0){
+						printf("      %-5d", record);
 						printf("%-10s", reg -> tipoDado.character);
+						record++;
+						y++;
+					}
 				}
-		
 				reg = reg -> prox;
 			}
 		}
