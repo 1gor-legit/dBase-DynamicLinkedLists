@@ -6,7 +6,6 @@
 
 int main(){
 	
-    Reg *regAtual = NULL;
     DBF *arqAberto = NULL;
     Unidade *unid = NULL;
     char command[45] = {0};
@@ -64,7 +63,9 @@ int main(){
                         LIST(unid -> u -> arq);
                     }
 
-                    else if(strncmp(command, "LIST FOR ", 9)){}
+                    else if(strncmp(command, "LIST FOR ", 9) == 0){
+                        LIST_FOR(unid -> u -> arq, command);
+                    }
 
                     else if (strcmp(command, "CLEAR") == 0){
                         CLEAR(unid, arqAberto);
@@ -74,12 +75,8 @@ int main(){
                         LOCATE(arqAberto, command);
                     }
 
-                    else if (strcmp(command, "CLEAR") == 0){
-                        CLEAR(unid, arqAberto);
-                    }
-
                     else if (strncmp(command, "GOTO ", 5) == 0){
-                        GOTO(arqAberto, command, &regAtual);
+                        GOTO(arqAberto, command);
                     }
 
                     else if (strcmp(command, "DISPLAY") == 0){

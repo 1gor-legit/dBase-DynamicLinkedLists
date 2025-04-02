@@ -172,7 +172,7 @@ void CREATE(Unidade **unid, char nomearq[]){
 
 void DIR(Armaz *a){
 	
-	int cont = 1, total, y = 9;
+	int cont = 1, total, y = 7;
 	
 	if(a -> arq == NULL){
 		gotoxy(84, 20);
@@ -181,7 +181,7 @@ void DIR(Armaz *a){
 	
 	else{
 		
-		gotoxy(26, 8);
+		gotoxy(32, 6);
 		printf("Database Files    # Records    Last Update    Size");
 		
 		DBF *aux = a -> arq;
@@ -195,7 +195,7 @@ void DIR(Armaz *a){
 				c = c -> prox;
 			}
 			
-			gotoxy(26, y++);
+			gotoxy(32, y++);
 			printf("%-23s%d        %.2d/%.2d/%d     %d", aux -> nomearq, cont, aux -> data.d, aux -> data.m, aux -> data.a, total);
 			cont++;
 			aux = aux -> prox;
@@ -218,7 +218,7 @@ void USE(Unidade *unid, char *nomearq, DBF**arqAberto){
 	while(arquivos != NULL && stricmp(arquivos -> nomearq, aux) != 0)
 		arquivos = arquivos -> prox;
 
-	if(arquivos != NULL){
+	if(arquivos != NULL && stricmp(arquivos -> nomearq, aux) == 0){
 		*arqAberto = arquivos;
 		textbackground(15);
 		textcolor(0);
@@ -289,13 +289,13 @@ void LIST_STRUCTURE(Armaz *a, DBF *arqAberto){
 }
 
 void APPEND(DBF *arq) {
+
+	gotoxy(27, 20);
+	printf("      ");
     
     if(arq != NULL){
-
-		gotoxy(27, 20);
-		printf("      ");
     	
-        int dadoNum;
+        int dadoNum, y = 6;
 		char dadoChar[30];
 
 		Status *novoCampoStatus = (Status*)malloc(sizeof(Status));
@@ -314,7 +314,18 @@ void APPEND(DBF *arq) {
 			aux -> prox = novoCampoStatus;
 		}
 
-        Campo *campoAtual = arq -> campos;
+		Campo *campoAtual = arq -> campos;
+        while(campoAtual != NULL){
+
+			gotoxy(25, y);
+			printf("%s", campoAtual -> nomeCampo);
+
+			y++;
+            campoAtual = campoAtual -> prox;
+		}
+
+		y = 6;
+        campoAtual = arq -> campos;
         while(campoAtual != NULL){
             Reg *novoReg = (Reg*)malloc(sizeof(Reg));
             novoReg -> prox = NULL;
@@ -322,16 +333,17 @@ void APPEND(DBF *arq) {
 			printf("                        ");
 
 			if(stricmp(campoAtual -> tipo, "NUMERIC") == 0){
-				gotoxy(27, 20);
+				gotoxy(40, y);
 				scanf("%d", &dadoNum);
 				novoReg -> tipoDado.num = dadoNum;
 			}
             
             else if(stricmp(campoAtual -> tipo, "CHARACTER") == 0){
-				gotoxy(27, 20);
+				gotoxy(40, y);
 				fflush(stdin);
 				gets(dadoChar);
-				strncpy(novoReg -> tipoDado.character, dadoChar, campoAtual -> tam);
+				strcpy(novoReg -> tipoDado.character, dadoChar);
+				//strncpy(novoReg -> tipoDado.character, dadoChar, campoAtual -> tam);
 			}
     
             if(campoAtual -> dados == NULL)
@@ -344,7 +356,8 @@ void APPEND(DBF *arq) {
                 
                 temp -> prox = novoReg;
             }
-            
+			
+			y++;
             campoAtual = campoAtual -> prox;
         }
         
@@ -366,20 +379,18 @@ void LIST(DBF *arq){
 			printf("Record#");
 			Campo *campo = arq -> campos;
 			while(campo != NULL){
-				printf("%12s", campo -> nomeCampo);
+				printf("%10s", campo -> nomeCampo);
 				campo = campo -> prox;
 			}
-			
 
 			while(statusAtual != NULL){
 	        
 				if(statusAtual -> info == 'T'){
 					
 					campo = arq -> campos;
-					int x = 40;
 
 					gotoxy(25, y);
-					printf("      %d", record);
+					printf("      %-5d", record);
 
 					while (campo != NULL){
 						
@@ -389,10 +400,10 @@ void LIST(DBF *arq){
 		
 						if (registro != NULL){
 							if (stricmp(campo -> tipo, "NUMERIC") == 0)
-								printf("%12d", registro -> tipoDado.num);
+								printf("%-12d", registro -> tipoDado.num);
 							
 							else if (stricmp(campo -> tipo, "CHARACTER") == 0)
-								printf("    %-13s", registro -> tipoDado.character);
+								printf("%-10s", registro -> tipoDado.character);
 						}
 							
 						campo = campo -> prox;
@@ -413,14 +424,67 @@ void LIST(DBF *arq){
 		}
 	}
 
+	else{
+		gotoxy(72, 20);
+		printf("Nenhum campo registrado!");
+	}
+
 	getchar();
 }
 
+void LIST_FOR(DBF *arq, char *command){
+    if (arq != NULL && arq -> campos != NULL) {
+        char conteudo[30], campo[30];
+        int i, j;
+
+        for (i = 9; command[i] != ' '; i++)
+            campo[i - 9] = command[i];
+        campo[i - 9] = '\0';
+
+		for (j = i + 4; command[j] != '"'; j++)
+			conteudo[j - (i + 4)] = command[j];
+		conteudo[j - (i + 4)] = '\0';
+
+		// Procura o campo na estrutura
+		Campo *c = arq -> campos;
+		while (c != NULL && stricmp(c -> nomeCampo, campo) != 0)
+			c = c -> prox;
+
+		if (c != NULL){
+
+			Reg *reg = c -> dados;
+			while(reg != NULL){
+				if(stricmp(c -> tipo, "NUMERIC") == 0){
+					int content = atoi(conteudo);
+		
+					if(content == reg -> tipoDado.num)
+						printf("%-12d", reg -> tipoDado.num);
+				}
+		
+				else if(stricmp(c -> tipo, "CHARACTER") == 0){
+		
+					char aux[30];
+					for (int i = 0; i < strlen(conteudo); i++)
+						aux[i] = reg -> tipoDado.character[i];
+		
+					if(stricmp(aux, conteudo) == 0)
+						printf("%-10s", reg -> tipoDado.character);
+				}
+		
+				reg = reg -> prox;
+			}
+		}
+	}
+    getchar();
+}
+
 void CLEAR(Unidade *unid, DBF *arqAberto){
-	system("cls");
+
 	TelaPrincipal(unid);
+	textbackground(0);
+	textcolor(15);
 	gotoxy(25, 21);
-	printf("USE             %c<%s>%c%s                  %c                %c ", 186, unid -> u, 186, arqAberto -> nomearq, 186, 186);     
+	printf("USE             %c<%s>%c%s                  %c                %c ", 186, unid -> u, 186, arqAberto -> nomearq, 186, 186);
 }
 
 void LOCATE(DBF *arq, char *command){
@@ -460,19 +524,26 @@ void LOCATE(DBF *arq, char *command){
             }
         }
 
-        if(r != NULL && statusAtual -> info == 'T')
-            printf("Record =     %d\n", record);
-        else
-            printf("Registro nao encontrado!\n");
+        if(r != NULL && statusAtual -> info == 'T'){
+			gotoxy(51, 18);
+			printf("Record =     %d", record);
+		}
+        
+        else{
+			gotoxy(72, 20);
+			printf("Registro nao encontrado!");
+		}
+        
 	}
-
-	else
-		printf("Campo nao encontrado!\n");
+	else{
+		gotoxy(75, 20);
+		printf("Campo nao encontrado!");
+	}
 
 	getchar();
 }
 
-void GOTO(DBF *arq, char *command, Reg **regAtual){
+void GOTO(DBF *arq, char *command){
 	char aux[20]; int record;
 	for(int i = 5; command[i] != ' '; i++)
 		aux[i - 5] = command[i];
@@ -492,7 +563,6 @@ void GOTO(DBF *arq, char *command, Reg **regAtual){
 		gotoxy(71, 20);
 		printf("Registro fora do alcance!\n");
 	}
-        
 
 	else{
 		while (campo != NULL){
@@ -511,33 +581,17 @@ void GOTO(DBF *arq, char *command, Reg **regAtual){
 
 void DISPLAY(DBF *arq){
 
-	int record = 1, x = 25;
+	int record = 1, x = 25 , y = 18;
 
 	if(arq -> campos -> pAtual != NULL){
+		gotoxy(25, 17);
+		printf("Record#");
+		
 		Campo *c = arq -> campos;
-		if(c != NULL){
-			gotoxy(x, 16);
-			printf("Record#    ");
-			x += 11;
-		}
-
 		while(c != NULL){
-
-			if(stricmp(c -> tipo, "NUMERIC") == 0){
-				gotoxy(x, 16);
-				printf("%-7s", c -> nomeCampo);
-				x += 10;
-			}
-
-			else if(stricmp(c -> tipo, "CHARACTER") == 0){
-				gotoxy(x, 16);
-				printf("%-20s", c -> nomeCampo);
-				x += 10;
-			}
-			
+			printf("%10s", c -> nomeCampo);
 			c = c -> prox;
 		}
-		printf("\n");
 
 		Reg *busca = arq -> campos -> dados;
 
@@ -552,10 +606,10 @@ void DISPLAY(DBF *arq){
 				record++;
 				busca = busca -> prox;
 			}
-
+		
 		x = 31;
-		gotoxy(x, 17);
-		printf("%-5d", record);
+		gotoxy(25, y);
+		printf("      %-5d", record);
 		x += 4;
 
 		c = arq -> campos;
@@ -563,17 +617,11 @@ void DISPLAY(DBF *arq){
 
 			Reg *registro = c -> pAtual;
 			
-			if(stricmp(c -> tipo, "NUMERIC") == 0){
-				gotoxy(x++, 17);
-				printf("   %-4d", registro -> tipoDado.num);
-			}
+			if(stricmp(c -> tipo, "NUMERIC") == 0)
+				printf("%-12d", registro -> tipoDado.num);
 
-			else if(stricmp(c -> tipo, "CHARACTER") == 0){
-				gotoxy(x++, 17);
-				printf("%-20s", registro -> tipoDado.character);
-			}
-
-			record++;
+			else if(stricmp(c -> tipo, "CHARACTER") == 0)
+				printf("%-10s", registro -> tipoDado.character);
 			c = c -> prox;
 		}
 	}
@@ -588,33 +636,40 @@ void DISPLAY(DBF *arq){
 void EDIT(DBF *arq){
 
 	char novaString[50];
-	int novoNum;
+	int novoNum, y = 6;
 
 	Campo *c = arq -> campos;
 	while(c != NULL){
 
-		if(stricmp(c -> tipo, "CHARACTER") == 0)
-			printf("%s     %s\n", toupper(c -> nomeCampo), c -> pAtual);
+		if(stricmp(c -> tipo, "CHARACTER") == 0){
+			gotoxy(25, y);
+			printf("%s     %s", toupper(c -> nomeCampo), c -> pAtual);
+		}
 		
-		else if(stricmp(c -> tipo, "NUMERIC") == 0)
-			printf("%s   %d\n", toupper(c -> nomeCampo), c -> pAtual -> tipoDado);
-		
+		else if(stricmp(c -> tipo, "NUMERIC") == 0){
+			gotoxy(25, y);
+			printf("%s   %d", toupper(c -> nomeCampo), c -> pAtual -> tipoDado);
+		}
+		y++;
 		c = c -> prox;
 	}
 
+	y += 2;
 	c = arq -> campos;
 	while(c != NULL){
 
-		printf("\n%s: ", toupper(c -> nomeCampo));
+		gotoxy(25, y++);
+		printf("NOVO %s: ", toupper(c -> nomeCampo));
 		
 		if(stricmp(c -> tipo, "CHARACTER") == 0){
+			gotoxy(25, y++);
 			fflush(stdin);
-			scanf("%s", novaString);
+			gets(novaString);
 			strcpy(c -> pAtual -> tipoDado.character, novaString);
 		}
 		
 		else if(stricmp(c -> tipo, "NUMERIC") == 0){
-			fflush(stdin);
+			gotoxy(25, y++);
 			scanf("%d", &novoNum);
 			c -> pAtual -> tipoDado.num = novoNum;
 		}
@@ -815,9 +870,7 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
 }
 
 void TransformaMAIUSCULA(char str[]){
-
-	int i;
-	for(i = 0; i < strlen(str); i++)
+	for(int i = 0; i < strlen(str); i++)
 		str[i] = toupper(str[i]);
 }
 
@@ -870,7 +923,6 @@ void TelaPrincipal(Unidade *unid){
 
 void TelaCREATE(Unidade *unid){
 	
-	system("cls");
 	TelaPrincipal(unid);
 	
 	textbackground(15);
