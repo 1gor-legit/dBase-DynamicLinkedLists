@@ -342,8 +342,7 @@ void APPEND(DBF *arq) {
 				gotoxy(40, y);
 				fflush(stdin);
 				gets(dadoChar);
-				strcpy(novoReg -> tipoDado.character, dadoChar);
-				//strncpy(novoReg -> tipoDado.character, dadoChar, campoAtual -> tam);
+				strncpy(novoReg -> tipoDado.character, dadoChar, campoAtual -> tam);
 			}
     
             if(campoAtual -> dados == NULL)
@@ -445,49 +444,69 @@ void LIST_FOR(DBF *arq, char *command){
 			conteudo[j - (i + 4)] = command[j];
 		conteudo[j - (i + 4)] = '\0';
 
-		gotoxy(25, 4);
-		printf("Record#");
-
 		// Procura o campo na estrutura
 		Campo *c = arq -> campos;
 		while (c != NULL && stricmp(c -> nomeCampo, campo) != 0)
 			c = c -> prox;
 
-		printf("%10s", c -> nomeCampo);
-
 		if (c != NULL){
 
-			Reg *reg = c -> dados;
-			while(reg != NULL){
+			Reg *regCompara = c -> dados;
+			Status *statusAtual = arq -> status;
 
-				gotoxy(25, y);
+			gotoxy(25, 4);
+			printf("Record#");
 
-				if(stricmp(c -> tipo, "NUMERIC") == 0){
-					int content = atoi(conteudo);
+			Campo *campoAux = arq -> campos;
+			while(campoAux != NULL){
+				printf("%10s", campoAux -> nomeCampo);
+				campoAux = campoAux -> prox;
+			}
+			printf("\n");
+
+			int cont = 0;
+
+			while(statusAtual != NULL){
+
+				if(statusAtual -> info == 'T'){
+
+					int flag = 0;
+					
+					if (stricmp(c -> tipo, "NUMERIC") == 0){
+						int content = atoi(conteudo);
+						if(regCompara -> tipoDado.num == conteudo)
+							flag = 1;
+					}
 		
-					if(content == reg -> tipoDado.num){
-						printf("      %-5d", record);
-						printf("%-12d", reg -> tipoDado.num);
-						record++;
-						y++;
+					else if (stricmp(c -> tipo, "CHARACTER") == 0)
+						if(strnicmp(regCompara -> tipoDado.character, conteudo, strlen(conteudo)) == 0)
+							flag = 1;
+					
+					if(flag == 1){
+
+						campoAux = arq -> campos;
+						while (campoAux != NULL){
+							
+							Reg *registro = campoAux -> dados;
+							for(i = 0; i < cont && registro != NULL; i++)
+								registro = registro -> prox;
+			
+							if (registro != NULL){
+								if (stricmp(campoAux -> tipo, "NUMERIC") == 0)
+									printf("%-12d\n", registro -> tipoDado.num);
+								
+								else if (stricmp(campoAux -> tipo, "CHARACTER") == 0)
+									printf("%-10s\n", registro -> tipoDado.character);
+							}
+								
+							campoAux = campoAux -> prox;
+						}
 					}
 				}
-		
-				else if(stricmp(c -> tipo, "CHARACTER") == 0){
-		
-					char aux[30] = {};
-					for (int i = 0; i < strlen(conteudo); i++)
-						aux[i] = reg -> tipoDado.character[i];
-					aux[i] = '\0';
-		
-					if(stricmp(aux, conteudo) == 0){
-						printf("      %-5d", record);
-						printf("%-10s", reg -> tipoDado.character);
-						record++;
-						y++;
-					}
-				}
-				reg = reg -> prox;
+
+				cont++;
+				regCompara = regCompara -> prox;
+				statusAtual = statusAtual -> prox;
 			}
 		}
 	}
