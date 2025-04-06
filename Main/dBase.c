@@ -119,7 +119,48 @@ int main(){
                     else if (strcmp(command, "ZAP") == 0){
                         ZAP(arqAberto);
                     }
+
+                    else if (strcmp(command, "MODIFY STRUCTURE") == 0){
+
+                        char campo[15], type[15];
+                        int width, dec;
+                        char data[15], hora[10];
+
+                        TelaCREATE(unid);
+                        int y = 13, j = 1;
+                        TelaCAMPO(y, j);
+
+                        gotoxy(29, 13);
+                        fflush(stdin);
+                        gets(campo);
+                        TransformaMAIUSCULA(campo);
+
+                        while(stricmp(campo, "\0") != 0){
+                            gotoxy(41, y);
+                            fflush(stdin);
+                            scanf("%s", type);
+                            TransformaMAIUSCULA(type);
+                            gotoxy(52, y);
+                            scanf("%d", &width);
+                            gotoxy(57, y);
+                            scanf("%d", &dec);
+                            MODIFY_STRUCTURE(&(unid -> u -> arq), unid -> u -> arq -> nomearq, campo, type, width, dec);
+                            textbackground(0);
+                            textcolor(15);
+                            y += 1;
+                            j += 1;
+                            TelaCAMPO(y, j);
+                            gotoxy(29, y);
+                            fflush(stdin);
+                            gets(campo);
+                            TransformaMAIUSCULA(campo);
+                        }
+
+                        textbackground(0);
+                        textcolor(15);
+                    }
                 }
+                
                 else{
                     strcpy(command, "BACK");
                 }
