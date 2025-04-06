@@ -2,6 +2,7 @@
 #include <stdlib.h> //malloc
 #include <string.h>
 #include <conio2.h>
+#include <time.h> // pegar data e hora
 #include "commands.h"
 
 int main(){

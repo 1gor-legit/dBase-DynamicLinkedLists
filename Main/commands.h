@@ -1,8 +1,3 @@
-struct data{
-	int d, m, a;
-};
-typedef struct data Data;
-
 union tipo{
     int num;
     char data;
@@ -37,8 +32,8 @@ typedef struct campo Campo;
 
 struct DBFFile{
 	char nomearq[50];
-	Data data;
-	char hora[6];
+	char data[15];
+	char hora[10];
 	Status *status;
 	Campo *campos;
 	int DEL;
@@ -61,6 +56,17 @@ typedef struct unidade Unidade;
 void TelaPrincipal(Unidade *unid);
 void Moldura(int CI, int LI, int CF, int LF, int Frente);
 void TelaCREATE();
+
+void getDataHora(char **data, char **hora){
+    time_t t;
+    struct tm *tm_info;
+
+    time(&t);
+    tm_info = localtime(&t);
+
+    strftime(data, 11, "%d/%m/%Y", tm_info);
+    strftime(hora, 6, "%H:%M", tm_info);
+}
 
 //INIT DAS UNIDADES C: E D: E FAZ A CABEÇA APONTAR PRA C:
 void Init(Unidade **unid){
@@ -115,6 +121,7 @@ void CREATE(Unidade **unid, char nomearq[]){
 
 	char aux[20], campo[15], type[15];
 	int i, width, dec;
+	char data[15], hora[10];
 
 	for (i = 7; nomearq[i] != ' '; i++)
 		aux[i - 7] = nomearq[i];
@@ -123,10 +130,9 @@ void CREATE(Unidade **unid, char nomearq[]){
     DBF *novoarq = (DBF*)malloc(sizeof(DBF));
     strcpy(novoarq -> nomearq, aux);
 	strcat(novoarq -> nomearq, ".DBF");
-    novoarq -> data.d = 9;
-    novoarq -> data.m = 4;
-    novoarq -> data.a = 2025;
-    strcpy(novoarq -> hora, "10:00");
+	getDataHora(&data, &hora);
+	strcpy(novoarq -> data, data);
+    strcpy(novoarq -> hora, hora);
 	novoarq -> status = NULL;
     novoarq -> campos = NULL;
 	novoarq -> DEL = 1;
@@ -196,7 +202,7 @@ void DIR(Armaz *a){
 			}
 			
 			gotoxy(32, y++);
-			printf("%-23s%d        %.2d/%.2d/%d     %d", aux -> nomearq, cont, aux -> data.d, aux -> data.m, aux -> data.a, total);
+			printf("%-23s%d        %s     %d", aux -> nomearq, cont, aux -> data, total);
 			cont++;
 			aux = aux -> prox;
 		}
@@ -248,7 +254,7 @@ void LIST_STRUCTURE(Armaz *a, DBF *arqAberto){
 	    gotoxy(40, 5);
 		printf("Number of data records: %5d", 0);
 	    gotoxy(40, 6);
-		printf("Date of last update   : %.2d/%.2d/%d", arqAberto -> data.d, arqAberto -> data.m, arqAberto -> data.a);
+		printf("Date of last update   : %s", arqAberto -> data);
 	    
 	    Campo *c = arqAberto -> campos;
 		int y = 10;
@@ -296,7 +302,7 @@ void APPEND(DBF *arq) {
     if(arq != NULL){
     	
         int dadoNum, y = 6;
-		char dadoChar[30];
+		char dadoChar[30], data[15], hora[10];
 
 		Status *novoCampoStatus = (Status*)malloc(sizeof(Status));
 		novoCampoStatus -> info = 'T';
@@ -359,6 +365,10 @@ void APPEND(DBF *arq) {
 			y++;
             campoAtual = campoAtual -> prox;
         }
+
+		getDataHora(&data, &hora);
+		strcpy(arq -> data, data);
+    	strcpy(arq -> hora, hora);
         
 		gotoxy(64, 20);
         printf("Registro adicionado com sucesso!");
@@ -579,12 +589,17 @@ void LOCATE(DBF *arq, char *command){
 }
 
 void GOTO(DBF *arq, char *command){
-	char aux[20]; int record;
-	for(int i = 5; command[i] != ' '; i++)
+
+	char aux[20];
+	int record, i;
+
+	for(i = 5; command[i] != ' '; i++)
 		aux[i - 5] = command[i];
+	aux[i - 5] = '\0';
+	
 	record = atoi(aux);
 
-	int totalRegistros = 0, i;
+	int totalRegistros = 0;
     Campo *campo = arq -> campos;
 	Reg *registro = campo -> dados;
 
@@ -670,7 +685,7 @@ void DISPLAY(DBF *arq){
 
 void EDIT(DBF *arq){
 
-	char novaString[50];
+	char novaString[50], data[15], hora[10];
 	int novoNum, y = 6;
 
 	Campo *c = arq -> campos;
@@ -709,6 +724,12 @@ void EDIT(DBF *arq){
 			c -> pAtual -> tipoDado.num = novoNum;
 		}
 		c = c -> prox;
+
+		if(c == NULL){
+			getDataHora(&data, &hora);
+			strcpy(arq -> data, data);
+			strcpy(arq -> hora, hora);
+		}
 	}
 }
 
