@@ -53,10 +53,6 @@ struct unidade{
 };
 typedef struct unidade Unidade;
 
-void TelaPrincipal(Unidade *unid);
-void Moldura(int CI, int LI, int CF, int LF, int Frente);
-void TelaCREATE();
-
 void getDataHora(char **data, char **hora){
     time_t t;
     struct tm *tm_info;
@@ -372,6 +368,7 @@ void APPEND(DBF *arq) {
         
 		gotoxy(64, 20);
         printf("Registro adicionado com sucesso!");
+		fflush(stdin);
 		getchar();
     }
 }
@@ -923,6 +920,104 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     }
 	else
 		aux -> campos = novoCampo;
+}
+
+void SORT(DBF *arq){
+
+	char campo[15];
+	int registros = 0;
+
+	gotoxy(27, 20);
+	printf("Enter the field name to sort by: ");
+	fflush(stdin);
+	gets(campo);
+	TransformaMAIUSCULA(campo);
+
+	Campo *c = arq -> campos;
+	while(c != NULL && stricmp(c -> nomeCampo, campo) != 0)
+		c = c -> prox;
+
+	if(c != NULL){
+
+		Reg *qtdReg = c -> dados;
+		while(qtdReg != NULL){
+			registros++;
+			qtdReg = qtdReg -> prox;
+		}
+
+		while(registros > 0){
+
+			int cont = 0;
+			Reg *regAtual = c -> dados;
+			Status *StatusAtual = arq -> status;
+
+			while(regAtual -> prox != NULL){
+
+				Reg *regProx = regAtual -> prox;
+
+				int flag = 0;
+				if(stricmp(c -> tipo, "NUMERIC") == 0){
+					if(regProx != NULL)
+						if(regAtual -> tipoDado.num > regProx -> tipoDado.num)
+							flag = 1;
+				}
+
+				if(stricmp(c -> tipo, "CHARACTER") == 0){
+					if(regProx != NULL)
+						if(stricmp(regAtual -> tipoDado.character, regProx -> tipoDado.character) > 0)
+							flag = 1;
+				}
+
+				if(flag == 1){
+
+					Status *StatusProx = StatusAtual -> prox;
+					if(StatusProx != NULL){
+						char auxStatus = StatusAtual -> info;
+						StatusAtual -> info = StatusProx -> info;
+						StatusProx -> info = auxStatus;
+					}
+
+					Campo *CampoAux = arq -> campos;
+					while(CampoAux != NULL){
+
+						Reg *regI = CampoAux -> dados;
+						for(int i = 0; i < cont; i++)
+							regI = regI -> prox;
+						
+						if(regI -> prox != NULL){
+
+							Reg *regJ = regI -> prox;
+							
+							if(stricmp(CampoAux -> tipo, "NUMERIC") == 0){
+								int auxNumeric = regI -> tipoDado.num;
+								regI -> tipoDado.num = regJ -> tipoDado.num;
+								regJ -> tipoDado.num = auxNumeric;
+							}
+		
+							if(stricmp(CampoAux -> tipo, "CHARACTER") == 0){
+								char auxCharacter[50];
+								strcpy(auxCharacter, regI -> tipoDado.character);
+								strcpy(regI -> tipoDado.character, regJ -> tipoDado.character);
+								strcpy(regJ -> tipoDado.character, auxCharacter);
+							}
+						}
+
+						CampoAux = CampoAux -> prox;
+					}
+				}
+
+				cont++;
+				StatusAtual = StatusAtual -> prox;
+				regAtual = regAtual -> prox;
+			}
+
+			registros--;
+		}
+
+		gotoxy(35, 15);
+		printf("Registros ordenados com sucesso pelo campo %s!", campo);
+		getch();
+	}
 }
 
 void TransformaMAIUSCULA(char str[]){

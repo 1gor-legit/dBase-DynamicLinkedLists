@@ -159,6 +159,10 @@ int main(){
                         textbackground(0);
                         textcolor(15);
                     }
+
+                    else if (strcmp(command, "SORT") == 0){
+                        SORT(arqAberto);
+                    }
                 }
                 
                 else{
