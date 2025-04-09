@@ -396,6 +396,24 @@ void APPEND(DBF *arq) {
     }
 }
 
+void printaDadoCampo(Campo *campo, Reg *registro){
+	
+    if (stricmp(campo -> tipo, "NUMERIC") == 0)
+        printf("%-12.0f", registro -> tipoDado.num);
+
+    else if (stricmp(campo->tipo, "DATE") == 0)
+        printf("%-10s", registro -> tipoDado.date);
+
+    else if (stricmp(campo->tipo, "LOGICAL") == 0)
+        printf("%-10c", registro -> tipoDado.logical);
+
+    else if (stricmp(campo -> tipo, "CHARACTER") == 0)
+		printf("%-10s", registro -> tipoDado.character);
+
+    else if (stricmp(campo -> tipo, "MEMO") == 0)
+		printf("%-10s", registro -> tipoDado.memo);
+}
+
 void LIST(DBF *arq){
     
 	if (arq != NULL && arq -> campos != NULL){
@@ -427,22 +445,8 @@ void LIST(DBF *arq){
 						for(i = 0; i < cont && registro != NULL; i++)
 							registro = registro -> prox;
 		
-						if (registro != NULL){
-							if (stricmp(campo -> tipo, "NUMERIC") == 0)
-								printf("%-12.0f", registro -> tipoDado.num);
-							
-							else if (stricmp(campo -> tipo, "DATE") == 0)
-								printf("%-10s", registro -> tipoDado.date);
-
-							else if (stricmp(campo -> tipo, "LOGICAL") == 0)
-								printf("%-10c", registro -> tipoDado.logical);
-							
-							else if (stricmp(campo -> tipo, "CHARACTER") == 0)
-								printf("%-10s", registro -> tipoDado.character);
-
-							else if (stricmp(campo -> tipo, "MEMO") == 0)
-								printf("%-10s", registro -> tipoDado.memo);
-						}
+						if (registro != NULL)
+							printaDadoCampo(campo, registro);
 							
 						campo = campo -> prox;
 					}
@@ -471,7 +475,7 @@ void LIST(DBF *arq){
 }
 
 void LIST_FOR(DBF *arq, char *command){
-    if (arq != NULL && arq -> campos != NULL) {
+    if(arq != NULL && arq -> campos != NULL){
         char conteudo[30], campo[30];
         int i, j, y = 5, record = 1;
 
@@ -483,13 +487,13 @@ void LIST_FOR(DBF *arq, char *command){
 			conteudo[j - (i + 4)] = command[j];
 		conteudo[j - (i + 4)] = '\0';
 
-		// Procura o campo na estrutura
 		Campo *c = arq -> campos;
 		while (c != NULL && stricmp(c -> nomeCampo, campo) != 0)
 			c = c -> prox;
 
 		if (c != NULL){
-
+			
+			int cont = 0;
 			Reg *regCompara = c -> dados;
 			Status *statusAtual = arq -> status;
 
@@ -503,8 +507,6 @@ void LIST_FOR(DBF *arq, char *command){
 			}
 			printf("\n");
 
-			int cont = 0;
-
 			while(statusAtual != NULL){
 
 				if(statusAtual -> info == 'T'){
@@ -517,17 +519,20 @@ void LIST_FOR(DBF *arq, char *command){
 							flag = 1;
 					}
 
-					else if(stricmp(c -> tipo, "DATE") == 0)
+					else if(stricmp(c -> tipo, "DATE") == 0){
 						if(strnicmp(regCompara -> tipoDado.date, conteudo, strlen(conteudo)) == 0)
 							flag = 1;
+					}
 
-					else if(stricmp(c -> tipo, "LOGICAL") == 0)
-						if(regCompara -> tipoDado.logical == conteudo)
+					else if(stricmp(c -> tipo, "LOGICAL") == 0){
+						if(regCompara -> tipoDado.logical == conteudo[0])
 							flag = 1;
-		
-					else if(stricmp(c -> tipo, "CHARACTER") == 0)
+					}
+					
+					else if(stricmp(c -> tipo, "CHARACTER") == 0){
 						if(strnicmp(regCompara -> tipoDado.character, conteudo, strlen(conteudo)) == 0)
 							flag = 1;
+					}
 					
 					else if(stricmp(c -> tipo, "MEMO") == 0){
 						if(strnicmp(regCompara -> tipoDado.memo, conteudo, strlen(conteudo)) == 0)
@@ -535,31 +540,20 @@ void LIST_FOR(DBF *arq, char *command){
 					}
 
 					if(flag == 1){
+						
+						gotoxy(25, y++);
+    					printf("      %-5d", record++);
 
 						campoAux = arq -> campos;
 						while (campoAux != NULL){
 							
 							Reg *registro = campoAux -> dados;
-							for(i = 0; i < cont && registro != NULL; i++)
+							for(int k = 0; k < cont && registro != NULL; k++)
 								registro = registro -> prox;
-			
-							if (registro != NULL){
-								if(stricmp(campoAux -> tipo, "NUMERIC") == 0)
-									printf("%-12.0f\n", registro -> tipoDado.num);
-
-								else if(stricmp(campoAux -> tipo, "DATE") == 0)
-									printf("%-10s\n", registro -> tipoDado.date);
-
-								else if(stricmp(campoAux -> tipo, "LOGICAL") == 0)
-									printf("%-10c\n", registro -> tipoDado.logical);
-								
-								else if(stricmp(campoAux -> tipo, "CHARACTER") == 0)
-									printf("%-10s\n", registro -> tipoDado.character);
-
-								else if(stricmp(campoAux -> tipo, "MEMO") == 0)
-									printf("%-10s\n", registro -> tipoDado.memo);
-							}
-								
+							
+							if(registro != NULL)
+								printaDadoCampo(campoAux, registro);
+							
 							campoAux = campoAux -> prox;
 						}
 					}
@@ -689,7 +683,7 @@ void GOTO(DBF *arq, char *command){
 
     if (record < 1 || record > totalRegistros){
 		gotoxy(71, 20);
-		printf("Registro fora do alcance!\n");
+		printf("Registro fora do alcance!");
 	}
 
 	else{
@@ -702,7 +696,7 @@ void GOTO(DBF *arq, char *command){
 			campo = campo -> prox;
 		}
 		gotoxy(76, 20);
-		printf("Registro %d acessado!\n", record);
+		printf("Registro %d acessado!", record);
 	}
 	getchar();
 }
@@ -762,21 +756,7 @@ void DISPLAY(DBF *arq){
 		while(c != NULL){
 
 			Reg *registro = c -> pAtual;
-			
-			if(stricmp(c -> tipo, "NUMERIC") == 0)
-				printf("%-12.0f", registro -> tipoDado.num);
-
-			else if(stricmp(c -> tipo, "DATE") == 0)
-				printf("%-10s", registro -> tipoDado.date);
-			
-			else if(stricmp(c -> tipo, "LOGICAL") == 0)
-				printf("%-10c", registro -> tipoDado.logical);
-			
-			else if(stricmp(c -> tipo, "CHARACTER") == 0)
-				printf("%-10s", registro -> tipoDado.character);
-			
-			else if(stricmp(c -> tipo, "MEMO") == 0)
-				printf("%-10s", registro -> tipoDado.memo);
+			printaDadoCampo(c, registro);
 			
 			c = c -> prox;
 		}
