@@ -64,7 +64,7 @@ void getDataHora(char **data, char **hora){
     strftime(hora, 6, "%H:%M", tm_info);
 }
 
-//INIT DAS UNIDADES C: E D: E FAZ A CABEÇA APONTAR PRA C:
+//INIT DAS UNIDADES C: E D: E FAZ A CABEÃ‡A APONTAR PRA C:
 void Init(Unidade **unid){
 
 	Armaz *C, *D;
@@ -241,14 +241,20 @@ void USE(Unidade *unid, char *nomearq, DBF**arqAberto){
 
 void LIST_STRUCTURE(Armaz *a, DBF *arqAberto){
 	
-	int total = 0, cont = 1;
+	int total = 0, cont = 1, record = 0;
 	
 	if(arqAberto != NULL){
+		
+		Reg *regAux = arqAberto -> campos -> dados;
+		while(regAux != NULL){
+			regAux = regAux -> prox;
+			record++;
+		}
 		
 		gotoxy(40, 4);
 		printf("Structure for database: %s\\%s", a -> unidade, arqAberto -> nomearq);
 	    gotoxy(40, 5);
-		printf("Number of data records: %5d", 0);
+		printf("Number of data records: %5d", record);
 	    gotoxy(40, 6);
 		printf("Date of last update   : %s", arqAberto -> data);
 	    
@@ -399,7 +405,7 @@ void APPEND(DBF *arq) {
 void printaDadoCampo(Campo *campo, Reg *registro){
 	
     if (stricmp(campo -> tipo, "NUMERIC") == 0)
-        printf("%-12.0f", registro -> tipoDado.num);
+    	printf("%-12.0f", registro -> tipoDado.num);
 
     else if (stricmp(campo->tipo, "DATE") == 0)
         printf("%-10s", registro -> tipoDado.date);
@@ -447,6 +453,10 @@ void LIST(DBF *arq){
 		
 						if (registro != NULL)
 							printaDadoCampo(campo, registro);
+						
+						else{
+							printf("%-10s", " ");
+						}
 							
 						campo = campo -> prox;
 					}
@@ -922,7 +932,6 @@ void RECALL_ALL(DBF *arq){
 		gotoxy(25, 18);
 		printf("all records recalled");
 	}
-
 	else{
 		gotoxy(25, 18);
 		printf("SET DELETED is ON, turn off to realize the operation!");
@@ -1036,9 +1045,18 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     strcpy(novoCampo -> tipo, tipo);
     novoCampo -> tam = tam;
     novoCampo -> dec = dec;
-    novoCampo -> pAtual = novoCampo -> dados = NULL;
-    
-    DBF *aux = *dbf;
+    novoCampo -> prox = novoCampo -> pAtual = novoCampo -> dados = NULL;
+
+	if((*dbf) -> campos == NULL)
+		(*dbf) -> campos = novoCampo;
+
+	else{
+		Campo *aux = (*dbf) -> campos;
+		while(aux -> prox != NULL)
+			aux = aux -> prox;
+		aux -> prox = novoCampo;
+	}
+    /*DBF *aux = *dbf;
     while(aux != NULL && stricmp(aux -> nomearq, arq) != 0)
     	aux = aux -> prox;
     
@@ -1047,7 +1065,7 @@ void MODIFY_STRUCTURE(DBF**dbf, char *arq, char *nomeCampo, char tipo[10], int t
     	aux -> campos = novoCampo;
     }
 	else
-		aux -> campos = novoCampo;
+		aux -> campos = novoCampo;*/
 }
 
 void SORT(DBF *arq){
@@ -1256,7 +1274,7 @@ void TelaCREATE(Unidade *unid){
 	gotoxy(26, 8);
 	printf("  Word: Home End");
 	gotoxy(26, 9);
-	printf("  Pan:   ^< ^>");
+	printf("  Pan:    ^< ^>");
 
 	//CAIXA 2
 	Moldura(43, 5, 57, 10, 15);
@@ -1279,11 +1297,11 @@ void TelaCREATE(Unidade *unid){
 	gotoxy(58, 6);
 	printf("     DELETE");
 	gotoxy(58, 7);
-	printf("  Char:");
+	printf("  Char:  Del");
 	gotoxy(58, 8);
-	printf("  Word:");
+	printf("  Word:   ^Y");
 	gotoxy(58, 9);
-	printf("  Field:");
+	printf("  Field:  ^U");
 	//CONECTORES CAIXA 3
 	gotoxy(57, 5);
 	printf("%c", 203);
@@ -1315,7 +1333,7 @@ void TelaCREATE(Unidade *unid){
 }
 
 void TelaCAMPO(int y, int j){
-	//Cabeçalho dos campos
+	//CabeÃ§alho dos campos
 	textcolor(15);
 	gotoxy(29, 11);
 	printf("Field Name  Type     Width  Dec");
